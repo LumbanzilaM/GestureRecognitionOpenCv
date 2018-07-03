@@ -1,0 +1,5 @@
+version: 1.0.{build}
+clone_folder: C:\Users\NyrOne\Desktop\GestureRecognitionDev\GestureRecognitionOpenCv\GestureRecognition
+build:
+  project: GestureRecognition\GestureRecognition.sln
+  verbosity: minimal
