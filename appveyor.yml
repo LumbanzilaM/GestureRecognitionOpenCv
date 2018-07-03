@@ -2,7 +2,7 @@ version: 1.0.{build}
 image: Visual Studio 2017
 
 install:
-- ps: choco install opencv--params="'/InstallationPath'" -y
+- ps: choco install opencv -y
 
 build:
   project: GestureRecognition\GestureRecognition.sln
