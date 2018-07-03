@@ -2,6 +2,7 @@ version: 1.0.{build}
 branches:
   # whitelist
   only:
+  - master
   - R&D
 image: Visual Studio 2017
 
