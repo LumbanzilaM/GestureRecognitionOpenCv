@@ -1,8 +1,5 @@
 version: 1.0.{build}
+image: Visual Studio 2017
 build:
   project: GestureRecognition\GestureRecognition.sln
   verbosity: minimal
-image: Visual Studio 2017
-build:
-  verbosity: minimal
-
