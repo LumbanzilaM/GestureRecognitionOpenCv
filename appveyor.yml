@@ -1,11 +1,8 @@
 version: 1.0.{build}
-<<<<<<< HEAD
-clone_folder: C:\Users\NyrOne\Desktop\GestureRecognitionDev\GestureRecognitionOpenCv\GestureRecognition
 build:
   project: GestureRecognition\GestureRecognition.sln
   verbosity: minimal
-=======
 image: Visual Studio 2017
 build:
   verbosity: minimal
->>>>>>> 491103ec2392c628b3b53f4bea05fbfa6b9d773d
+
