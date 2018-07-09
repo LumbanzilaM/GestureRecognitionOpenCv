@@ -49,7 +49,7 @@ void HandRegistrationHandler::RegisterHand()
 	for each (Rect rect in rois)
 	{
 		Mat registrationImgHSV;
-		cvtColor(registrationImg(rect), registrationImgHSV, CV_RGB2HSV);
+		cvtColor(registrationImg(rect), registrationImgHSV, CV_RGB2YCrCb);
 		Scalar median = mean(registrationImgHSV);
 		medians.push_back(median);
 		double a = median[0];
@@ -73,7 +73,7 @@ void HandRegistrationHandler::FindAndHideFace(Mat &src)
 		rectangle(src, face, Scalar(0), -2);
 		Face = face;
 	}
-	//rectangle(src, Face, Scalar(0), -2);
+	rectangle(src, Face, Scalar(0), -2);
 }
 
 Mat HandRegistrationHandler::FindHand(Mat src)
@@ -82,7 +82,7 @@ Mat HandRegistrationHandler::FindHand(Mat src)
 	Mat srcHSV;
 	
 	
-	cvtColor(src, srcHSV, CV_RGB2HSV);
+	cvtColor(src, srcHSV, CV_RGB2YCrCb);
 	FindAndHideFace(srcHSV);
 	rectangle(src, Face, Scalar(0), 2);
 
@@ -91,8 +91,8 @@ Mat HandRegistrationHandler::FindHand(Mat src)
 	
 	for each (Scalar median in medians)
 	{
-		Scalar lower(median[0] - 40, median[1] - 40, median[2] - 40);
-		Scalar upper(median[0] + 40, median[1] + 40, median[2] + 40);
+		Scalar lower(median[0] - 10, median[1] - 10, median[2] - 10);
+		Scalar upper(median[0] + 15, median[1] + 15, median[2] + 15);
 		Mat thresholdImg;
 
 
@@ -111,11 +111,7 @@ Mat HandRegistrationHandler::FindHand(Mat src)
 	{
 		result += thresholdImg;
 	}
-	Mat element = getStructuringElement(MORPH_RECT, Size(3, 3), Point(-1, -1));
 	thresholds.clear();
-	erode(result, result, element, Point(1, 1), 5);
-	dilate(result, result, element, Point(1, 1), 6);
-	GaussianBlur(result, result, Size(3, 3), 1);
 	medianBlur(result, result, 7);
 	//imshow("result", result);
 	return result;

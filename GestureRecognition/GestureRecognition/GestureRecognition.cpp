@@ -30,9 +30,9 @@ void GestureRecognition::launchGestureRecognition()
 	{
 		//actualCamImg->readImage();
 		//actualCamImg->showImage();
-		flip(actualCamImg->capture, actualCamImg->capture, 1);
 		prepareHandExtraction();
 		performHandExtraction();
+		flip(actualCamImg->capture, actualCamImg->capture, 1);
 		actualCamImg->showImage();
 		if (waitKey(30) == 27) {
 			break;
@@ -87,56 +87,46 @@ void GestureRecognition::performHandExtraction()
 			if (contourArea(contours[i]) > 4000) {
 				convexHull(contours[i], hull[i], false);
 				convexityDefects(contours[i], hull[i], defects[i]);
-				if (indexOfBiggestContour == i /*|| indexOfSecondContour == i*/) {
+				if (indexOfBiggestContour == i || indexOfSecondContour == i) {
 					minRect[i] = minAreaRect(contours[i]);
 					for (size_t k = 0;k < hull[i].size();k++) {
 						int ind = hull[i][k];
 						hullPoint[i].push_back(contours[i][ind]);
 					}
 					count = 0;
-					approxPolyDP(contours[i], contours_poly[i], 3, false);
-					boundRect[i] = boundingRect(contours_poly[i]);
-					rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 0, 0), 2, 8, 0);
-					Rect tmp = boundRect[i];
-					int heigt = tmp.height;
-					int width = tmp.width;
+
 					for (size_t k = 0;k < defects[i].size();k++) {
 						if (defects[i][k][3] > 13 * 256) {
 							/*   int p_start=defects[i][k][0];   */
 							int p_end = defects[i][k][1];
 							int p_far = defects[i][k][2];
-							int p_start = defects[i][k][0];
-							
-							/*if (abs(p_end - p_start) < 0.4 * tmp.height)
-							{*/
-								//defectPoint[i].push_back(contours[i][p_far]);
-								circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
-								/*circle(actualCamImg->capture, contours[i][p_far], 3, Scalar(255, 0, 0), 2);
-								circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
-								count++;
-							//}
+							defectPoint[i].push_back(contours[i][p_far]);
+							circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
+							count++;
 						}
 
 					}
 
-					if (count == 2)
+					/*if (count == 1)
 						strcpy_s(a, "One");
-					else if (count == 3)
+					else if (count == 2)
 						strcpy_s(a, "Two");
-					else if (count == 4)
+					else if (count == 3)
 						strcpy_s(a, "Three");
-					else if (count == 5)
+					else if (count == 4)
 						strcpy_s(a, "Four");
-					else if (count == 6)
+					else if (count == 5)
 						strcpy_s(a, "Five");
 					else
-						strcpy_s(a, "Welcome !!");
+						strcpy_s(a, "Welcome !!");*/
 
-					putText(actualCamImg->capture, a, Point(70, 70), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 0, 0), 2, 8, false);
-					/*drawContours(threshImg->capture, contours, i, Scalar(255, 255, 0), 2, 8, vector<Vec4i>(), 0, Point());
+					//putText(actualCamImg->capture, a, Point(70, 70), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 0, 0), 2, 8, false);
+					drawContours(threshImg->capture, contours, i, Scalar(255, 255, 0), 2, 8, vector<Vec4i>(), 0, Point());
 					drawContours(threshImg->capture, hullPoint, i, Scalar(255, 255, 0), 1, 8, vector<Vec4i>(), 0, Point());
-					drawContours(actualCamImg->capture, hullPoint, i, Scalar(0, 0, 255), 2, 8, vector<Vec4i>(), 0, Point());*/
-					
+					drawContours(actualCamImg->capture, hullPoint, i, Scalar(0, 0, 255), 2, 8, vector<Vec4i>(), 0, Point());
+					approxPolyDP(contours[i], contours_poly[i], 3, false);
+					boundRect[i] = boundingRect(contours_poly[i]);
+					rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 0, 0), 2, 8, 0);
 					minRect[i].points(rect_point);
 					for (size_t k = 0;k < 4;k++) {
 						line(actualCamImg->capture, rect_point[k], rect_point[(k + 1) % 4], Scalar(0, 255, 0), 2, 8);
