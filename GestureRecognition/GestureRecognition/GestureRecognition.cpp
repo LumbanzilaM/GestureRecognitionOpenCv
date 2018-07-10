@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "GestureRecognition.h"
 
+# define M_PI           3.14159265358979323846 
 
 GestureRecognition::GestureRecognition(MyCamImage *camImg) : actualCamImg(camImg)
 {
@@ -54,6 +55,22 @@ void GestureRecognition::prepareHandExtraction()
 
 }
 
+float GestureRecognition::distanceP2P(Point a, Point b)
+{
+	float d = sqrt(fabs(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)));
+	return d;
+}
+
+float GestureRecognition::angleBetween(const Point &s, const Point &f, const Point &e)
+{
+	float l1 = distanceP2P(f, s);
+	float l2 = distanceP2P(f, e);
+	float dot = (s.x - f.x)*(e.x - f.x) + (s.y - f.y)*(e.y - f.y);
+	float angle = acos(dot / (l1*l2));
+	angle = angle * 180 / M_PI;
+	return angle;
+}
+
 void GestureRecognition::performHandExtraction()
 {
 	int count = 0;
@@ -84,7 +101,7 @@ void GestureRecognition::performHandExtraction()
 		vector<RotatedRect>minRect(contours.size());
 		vector<Rect> boundRect(contours.size());
 		for (size_t i = 0;i < contours.size();i++) {
-			if (contourArea(contours[i]) > 4000) {
+			if (contourArea(contours[i]) > 5000) {
 				convexHull(contours[i], hull[i], false);
 				convexityDefects(contours[i], hull[i], defects[i]);
 				if (indexOfBiggestContour == i /*|| indexOfSecondContour == i*/) {
@@ -96,27 +113,29 @@ void GestureRecognition::performHandExtraction()
 					count = 0;
 					approxPolyDP(contours[i], contours_poly[i], 3, false);
 					boundRect[i] = boundingRect(contours_poly[i]);
-					rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 0, 0), 2, 8, 0);
+					//rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 0, 0), 2, 8, 0);
 					Rect tmp = boundRect[i];
 					int heigt = tmp.height;
 					int width = tmp.width;
 					for (size_t k = 0;k < defects[i].size();k++) {
-						if (defects[i][k][3] > 13 * 256) {
+						
 							/*   int p_start=defects[i][k][0];   */
 							int p_end = defects[i][k][1];
 							int p_far = defects[i][k][2];
 							int p_start = defects[i][k][0];
-							
-							/*if (abs(p_end - p_start) < 0.4 * tmp.height)
-							{*/
+							int angle = angleBetween(contours[i][p_start], contours[i][p_far], contours[i][p_end]);
+							if (angle < 80 )
+							{
+								/*if (abs(p_end - p_start) < 0.4 * tmp.height)
+								{*/
 								//defectPoint[i].push_back(contours[i][p_far]);
 								circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
+								putText(actualCamImg->capture, std::to_string(k), contours[i][p_end], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
 								/*circle(actualCamImg->capture, contours[i][p_far], 3, Scalar(255, 0, 0), 2);
 								circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
 								count++;
-							//}
-						}
-
+								//}
+							}
 					}
 
 					if (count == 2)
