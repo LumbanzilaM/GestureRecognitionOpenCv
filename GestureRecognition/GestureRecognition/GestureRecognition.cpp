@@ -104,7 +104,7 @@ void GestureRecognition::performHandExtraction()
 			if (contourArea(contours[i]) > 5000) {
 				convexHull(contours[i], hull[i], false);
 				convexityDefects(contours[i], hull[i], defects[i]);
-				if (indexOfBiggestContour == i /*|| indexOfSecondContour == i*/) {
+				if (indexOfBiggestContour == i || indexOfSecondContour == i) {
 					minRect[i] = minAreaRect(contours[i]);
 					for (size_t k = 0;k < hull[i].size();k++) {
 						int ind = hull[i][k];
@@ -124,20 +124,23 @@ void GestureRecognition::performHandExtraction()
 							int p_far = defects[i][k][2];
 							int p_start = defects[i][k][0];
 							int angle = angleBetween(contours[i][p_start], contours[i][p_far], contours[i][p_end]);
-							if (angle < 80 )
+							/*circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
+							circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
+							if (angle < 80 /*|| defects[i][k][3] > 13* 256*/)
 							{
 								/*if (abs(p_end - p_start) < 0.4 * tmp.height)
 								{*/
 								//defectPoint[i].push_back(contours[i][p_far]);
-								circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
-								putText(actualCamImg->capture, std::to_string(k), contours[i][p_end], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
+								
+								//putText(actualCamImg->capture, std::to_string(k), contours[i][p_end], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
 								/*circle(actualCamImg->capture, contours[i][p_far], 3, Scalar(255, 0, 0), 2);
 								circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
 								count++;
 								//}
 							}
+							
 					}
-
+					putText(actualCamImg->capture, std::to_string(count + 1), Point((boundRect[i].height + boundRect[i].x) / 2, (boundRect[i].width + boundRect[i].y) /2), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(0, 0, 255), 2, 8, false);
 					if (count == 2)
 						strcpy_s(a, "One");
 					else if (count == 3)
