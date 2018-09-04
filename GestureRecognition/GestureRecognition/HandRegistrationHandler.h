@@ -37,5 +37,6 @@ private :
 	int squareSize;
 	CascadeClassifier face_cascade;
 	String face_cascade_name = "haarcascade_frontalface_alt2.xml";
+	int hmin, smin, vmin, hmax, smax, vmax = 0;
 };
 

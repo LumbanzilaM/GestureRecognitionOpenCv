@@ -7,6 +7,7 @@ HandRegistrationHandler::HandRegistrationHandler()
 	squareSize = 20;
 	bool lol;
 	lol = face_cascade.load(face_cascade_name);
+
 }
 
 
@@ -16,7 +17,20 @@ HandRegistrationHandler::~HandRegistrationHandler()
 
 void HandRegistrationHandler::InitHandRegistration(MyCamImage *camImg)
 {
-	;
+cv:String name = camImg->getWindowName();
+	hmin = 16;
+	hmax = 16;
+	vmin = 35;
+	vmax = 35;
+	smin = 26;
+	smax = 26;
+	createTrackbar("Hmin", name, &hmin, 256, 0);
+	createTrackbar("Hmax", name, &hmax, 256, 0);
+	createTrackbar("Vmin", name, &vmin, 256, 0);
+	createTrackbar("Vmax", name, &vmax, 256, 0);
+	createTrackbar("Smin", name, &smin, 256, 0);
+	createTrackbar("Smaw", name, &smax, 256, 0);
+
 	camImg->readImage(&registrationImg);
 	AddSquareRegistration();
 	/*rois.push_back(Rect(registrationImg.cols / 2, registrationImg.rows / 2.5, squareSize, squareSize));
@@ -80,24 +94,24 @@ Mat HandRegistrationHandler::FindHand(Mat src)
 {
 	Mat result;
 	Mat srcHSV;
-	
-	
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	RNG rng(12345);
+
+	FindAndHideFace(src);
 	cvtColor(src, srcHSV, CV_RGB2HSV);
-	FindAndHideFace(srcHSV);
 	rectangle(src, Face, Scalar(0), 2);
 
 
 	//RotatedRect rotRect = CamShift(src, Face, TermCriteria( TermCriteria::EPS | TermCriteria::COUNT, 10, 1 ));
-	
+
 	for each (Scalar median in medians)
 	{
-		Scalar lower(median[0] - 40, median[1] - 40, median[2] - 40);
-		Scalar upper(median[0] + 40, median[1] + 40, median[2] + 40);
+		Scalar lower(median[0] - hmin, median[1] - smin, median[2] - vmin);
+		Scalar upper(median[0] + hmax, median[1] + smax, median[2] + vmax);
 		Mat thresholdImg;
-
-
 		inRange(srcHSV, lower, upper, thresholdImg);
-		//threshold(srcHSV, thresholdImg, median, 255, THRESH_BINARY_INV + THRESH_OTSU);
+		findContours(thresholdImg, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 		thresholds.push_back(thresholdImg);
 		//imshow("tmp", thresholdImg);
 	}
@@ -111,12 +125,28 @@ Mat HandRegistrationHandler::FindHand(Mat src)
 	{
 		result += thresholdImg;
 	}
+	imshow("result before manipulation", result);
 	Mat element = getStructuringElement(MORPH_RECT, Size(3, 3), Point(-1, -1));
 	thresholds.clear();
-	erode(result, result, element, Point(1, 1), 5);
-	dilate(result, result, element, Point(1, 1), 6);
+
+	Mat testContour;
+	findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+	Mat drawing = Mat::zeros(result.size(), CV_8UC3);
+	for (int i = 0; i < contours.size(); i++)
+	{
+		Scalar color = Scalar(255, 255, 255);
+		drawContours(drawing, contours, i, color, FILLED, 8, hierarchy, 0, Point());
+	}
+	//floodFill(drawing, Point(0, 0), Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)));
+	imshow("Contours", drawing);
+	cvtColor(drawing, result, CV_RGB2GRAY);
+
+	erode(result, result, element, Point(1, 1), 2);
+	dilate(result, result, element, Point(1, 1), 3);
 	GaussianBlur(result, result, Size(3, 3), 1);
 	medianBlur(result, result, 7);
+
 	//imshow("result", result);
 	return result;
 }

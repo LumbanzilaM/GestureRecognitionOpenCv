@@ -31,7 +31,7 @@ void GestureRecognition::launchGestureRecognition()
 	{
 		//actualCamImg->readImage();
 		//actualCamImg->showImage();
-		flip(actualCamImg->capture, actualCamImg->capture, 1);
+		//flip(actualCamImg->capture, actualCamImg->capture, 1);
 		prepareHandExtraction();
 		performHandExtraction();
 		actualCamImg->showImage();
@@ -101,7 +101,7 @@ void GestureRecognition::performHandExtraction()
 		vector<RotatedRect>minRect(contours.size());
 		vector<Rect> boundRect(contours.size());
 		for (size_t i = 0;i < contours.size();i++) {
-			if (contourArea(contours[i]) > 5000) {
+			if (contourArea(contours[i]) > 8000) {
 				convexHull(contours[i], hull[i], false);
 				convexityDefects(contours[i], hull[i], defects[i]);
 				if (indexOfBiggestContour == i || indexOfSecondContour == i) {
@@ -126,7 +126,7 @@ void GestureRecognition::performHandExtraction()
 							int angle = angleBetween(contours[i][p_start], contours[i][p_far], contours[i][p_end]);
 							/*circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
 							circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
-							if (angle < 80 /*|| defects[i][k][3] > 13* 256*/)
+							if (angle < 80 && defects[i][k][3] > 13* 256)
 							{
 								/*if (abs(p_end - p_start) < 0.4 * tmp.height)
 								{*/
@@ -154,7 +154,7 @@ void GestureRecognition::performHandExtraction()
 					else
 						strcpy_s(a, "Welcome !!");
 
-					putText(actualCamImg->capture, a, Point(70, 70), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 0, 0), 2, 8, false);
+					//putText(actualCamImg->capture, a, Point(70, 70), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 0, 0), 2, 8, false);
 					/*drawContours(threshImg->capture, contours, i, Scalar(255, 255, 0), 2, 8, vector<Vec4i>(), 0, Point());
 					drawContours(threshImg->capture, hullPoint, i, Scalar(255, 255, 0), 1, 8, vector<Vec4i>(), 0, Point());
 					drawContours(actualCamImg->capture, hullPoint, i, Scalar(0, 0, 255), 2, 8, vector<Vec4i>(), 0, Point());*/
@@ -163,6 +163,7 @@ void GestureRecognition::performHandExtraction()
 					for (size_t k = 0;k < 4;k++) {
 						line(actualCamImg->capture, rect_point[k], rect_point[(k + 1) % 4], Scalar(0, 255, 0), 2, 8);
 					}
+					//flip(actualCamImg->capture, actualCamImg->capture, 1);
 				}
 			}
 		}
