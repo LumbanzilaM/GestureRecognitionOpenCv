@@ -17,7 +17,7 @@ public:
 	HandRegistrationHandler();
 	~HandRegistrationHandler();
 	void InitHandRegistration(MyCamImage *camImg);
-	
+	void SetBackground(Rect handRect);
 	void RegisterHand();
 	void FindAndHideFace(Mat &src);
 	Mat FindHand(Mat src);
@@ -27,6 +27,7 @@ public:
 private : 
 	void AddSquareRegistration();
 	void InitFaceDetection();
+	Mat Filtering(Mat src);
 
 	Mat hist;
 	Mat backProject;
