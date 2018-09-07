@@ -33,7 +33,6 @@ void GestureRecognition::launchGestureRecognition()
 	{
 		//actualCamImg->readImage();
 		//actualCamImg->showImage();
-		//flip(actualCamImg->capture, actualCamImg->capture, 1);
 		prepareHandExtraction();
 		performHandExtraction();
 		actualCamImg->showImage();
@@ -174,7 +173,6 @@ void GestureRecognition::performHandExtraction()
 					}
 					circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
 					circle(actualCamImg->capture, hands[0].PalmCenter, hands[0].PalmRadius, Scalar(0, 255, 0), 2);
-					//flip(actualCamImg->capture, actualCamImg->capture, 1);
 				}
 			}
 		}

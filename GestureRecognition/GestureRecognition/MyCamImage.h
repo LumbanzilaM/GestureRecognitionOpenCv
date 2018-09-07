@@ -14,8 +14,8 @@ public:
 	MyCamImage(String windowname);
 	~MyCamImage();
 
-	bool readImage();
-	bool readImage(Mat *img);
+	bool readImage(bool doesFlip = true);
+	bool readImage(Mat *img, bool doesFlip = true);
 	void showImage();
 	void showImage(Mat *img);
 	void setWindowName(String newWindowName);

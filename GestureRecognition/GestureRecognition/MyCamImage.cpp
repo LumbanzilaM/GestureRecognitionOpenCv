@@ -13,14 +13,26 @@ MyCamImage::~MyCamImage()
 {
 }
 
-bool MyCamImage::readImage()
+bool MyCamImage::readImage(bool doesFlip)
 {
-	return cam.read(capture);
+	
+	bool succes = cam.read(capture);
+	if (doesFlip)
+	{
+		flip(capture, capture, 1);
+	}
+	return succes;
 }
 
-bool MyCamImage::readImage(Mat *img)
+bool MyCamImage::readImage(Mat *img, bool doesFlip)
 {
-	return cam.read(*img);
+	
+	bool succes = cam.read(*img);
+	if (flip)
+	{
+		flip(*img, *img, 1);
+	}
+	return succes;
 }
 
 void MyCamImage::showImage()
