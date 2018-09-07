@@ -5,6 +5,8 @@
 
 GestureRecognition::GestureRecognition(MyCamImage *camImg) : actualCamImg(camImg)
 {
+	hands.push_back(Hand());
+	hands.push_back(Hand());
 }
 
 
@@ -46,11 +48,13 @@ void GestureRecognition::prepareHandExtraction()
 	Mat resImg;
 	actualCamImg->capture = resImg;
 	actualCamImg->readImage();
-	threshImg->capture = registrationHandler.FindHand(actualCamImg->capture);
+	registrationHandler.FindAndHideFace(actualCamImg->capture);
+	threshImg->capture = registrationHandler.FilterHand(actualCamImg->capture);
 
 	contours;
 	vector<Vec4i>hierarchy;
 	findContours(threshImg->capture, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point());
+	registrationHandler.FindPalmCenter(threshImg->capture, &hands[0], true);
 	threshImg->showImage();
 
 }
@@ -74,6 +78,7 @@ float GestureRecognition::angleBetween(const Point &s, const Point &f, const Poi
 void GestureRecognition::performHandExtraction()
 {
 	int count = 0;
+	vector<vector<Point>> selectedContours;
 	if (contours.size() > 0) {
 		size_t indexOfBiggestContour = -1;
 		size_t sizeOfBiggestContour = 0;
@@ -105,6 +110,9 @@ void GestureRecognition::performHandExtraction()
 				convexHull(contours[i], hull[i], false);
 				convexityDefects(contours[i], hull[i], defects[i]);
 				if (indexOfBiggestContour == i || indexOfSecondContour == i) {
+					/*selectedContours.push_back(contours[i]);*/
+					drawContours(actualCamImg->capture, contours, i, Scalar(255, 255, 255), 1, 8);
+					//drawContours(actualCamImg->capture, contours[i], i, Scalar(0, 0, 255), 1, 8);
 					minRect[i] = minAreaRect(contours[i]);
 					for (size_t k = 0;k < hull[i].size();k++) {
 						int ind = hull[i][k];
@@ -158,11 +166,14 @@ void GestureRecognition::performHandExtraction()
 					/*drawContours(threshImg->capture, contours, i, Scalar(255, 255, 0), 2, 8, vector<Vec4i>(), 0, Point());
 					drawContours(threshImg->capture, hullPoint, i, Scalar(255, 255, 0), 1, 8, vector<Vec4i>(), 0, Point());
 					drawContours(actualCamImg->capture, hullPoint, i, Scalar(0, 0, 255), 2, 8, vector<Vec4i>(), 0, Point());*/
-					
 					minRect[i].points(rect_point);
+				
+					
 					for (size_t k = 0;k < 4;k++) {
 						line(actualCamImg->capture, rect_point[k], rect_point[(k + 1) % 4], Scalar(0, 255, 0), 2, 8);
 					}
+					circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
+					circle(actualCamImg->capture, hands[0].PalmCenter, hands[0].PalmRadius, Scalar(0, 255, 0), 2);
 					//flip(actualCamImg->capture, actualCamImg->capture, 1);
 				}
 			}

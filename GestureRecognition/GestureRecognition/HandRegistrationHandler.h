@@ -8,6 +8,7 @@
 #include<opencv2/opencv.hpp>
 
 #include "MyCamImage.h"
+#include "Hand.h"
 using namespace cv;
 using namespace std;
 
@@ -20,7 +21,9 @@ public:
 	void SetBackground(Rect handRect);
 	void RegisterHand();
 	void FindAndHideFace(Mat &src);
-	Mat FindHand(Mat src);
+	Mat FilterHand(Mat src);
+	vector<Mat> FindHands(Mat src);
+	void FindPalmCenter(Mat src, Hand *hand, bool draw = true);
 	Mat getRegistrationImg();
 	Rect Face;
 
@@ -39,5 +42,6 @@ private :
 	CascadeClassifier face_cascade;
 	String face_cascade_name = "haarcascade_frontalface_alt2.xml";
 	int hmin, smin, vmin, hmax, smax, vmax = 0;
+	int adaptedVmin, adaptedVmax = 0;
 };
 

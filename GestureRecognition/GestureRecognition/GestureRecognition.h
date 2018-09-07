@@ -25,6 +25,7 @@ private:
 	MyCamImage *actualCamImg;
 	MyCamImage *threshImg;
 	vector<vector<Point>> contours;
+	vector<Hand> hands;
 	char a[40];
 
 };

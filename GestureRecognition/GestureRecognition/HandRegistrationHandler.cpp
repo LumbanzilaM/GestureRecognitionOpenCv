@@ -33,10 +33,6 @@ cv:String name = camImg->getWindowName();
 
 	camImg->readImage(&registrationImg);
 	AddSquareRegistration();
-	/*rois.push_back(Rect(registrationImg.cols / 2, registrationImg.rows / 2.5, squareSize, squareSize));
-	rois.push_back(Rect(registrationImg.cols / 2.5, registrationImg.rows / 1.8, squareSize, squareSize));*/
-
-	//registrationImg(rois[rois.size - 1]);
 	while (1) {
 
 		camImg->readImage(&registrationImg);
@@ -94,25 +90,20 @@ void HandRegistrationHandler::FindAndHideFace(Mat &src)
 	//rectangle(src, Face, Scalar(0), -2);
 }
 
-Mat HandRegistrationHandler::FindHand(Mat src)
+Mat HandRegistrationHandler::FilterHand(Mat src)
 {
 	Mat result;
 	Mat srcHSV;
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
-	RNG rng(12345);
 	Mat element = getStructuringElement(MORPH_ELLIPSE, Size(3, 3), Point(-1, -1));
 
-	FindAndHideFace(src);
-	rectangle(src, Face, Scalar(0), 2);
+	//Erase noise with erode, and find contours
 	result = Filtering(src);
-	
-	
-
-	erode(result , result, element, Point(1, 1), 3);
+	erode(result, result, element, Point(1, 1), 3);
 	findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-	
 
+	//Draw filled contours
 	Mat drawing = Mat::zeros(result.size(), CV_8UC3);
 	vector<vector<Point>> hull(contours.size());
 	for (int i = 0; i < contours.size(); i++)
@@ -122,16 +113,67 @@ Mat HandRegistrationHandler::FindHand(Mat src)
 		drawContours(drawing, contours, i, color, FILLED, 8, hierarchy, 0, Point());
 		//drawContours(drawing, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point());
 	}
-	dilate(drawing, drawing, element, Point(1, 1), 5);
+	//Dilate result for counterbalance the previous erode
+	dilate(drawing, drawing, element, Point(1, 1), 8);
 	imshow("Contours", drawing);
 	cvtColor(drawing, result, CV_RGB2GRAY);
-	erode(result, result, element, Point(1, 1), 2);
-	dilate(result, result, element, Point(1, 1), 3);
 	GaussianBlur(result, result, Size(3, 3), 1);
 	medianBlur(result, result, 7);
-
 	//imshow("result", result);
 	return result;
+}
+
+vector<Mat> HandRegistrationHandler::FindHands(Mat src)
+{
+	return vector<Mat>();
+}
+
+void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
+{
+	Mat dist;
+	Point minLoc, maxLoc;
+	bool isMaxRadiusReached = false;
+	double min, max;
+	distanceTransform(src, dist, DIST_L2, 5);
+	normalize(dist, dist, 0, 1, NORM_MINMAX);
+	minMaxLoc(dist, &min, &max, &minLoc, &maxLoc);
+	hand->PalmCenter = maxLoc;
+	if (draw)
+	{
+		circle(dist, maxLoc, 10, Scalar(255, 0, 0), -2);
+		imshow("dist", dist);
+	}
+	size_t circleRadius = 0;
+	vector<Point> circleContour;
+	try
+	{
+
+
+		while (!isMaxRadiusReached)
+		{
+			ellipse2Poly(maxLoc, Size(circleRadius, circleRadius), 0, 0, 360, 1, circleContour);
+			for each (Point pt in circleContour)
+			{
+				if (pt.x > 0 && pt.y > 0 && pt.x < src.rows && pt.y < src.cols)
+				{
+					unsigned char color = src.at<unsigned char>(pt);
+					
+					if (color != 255)
+					{
+						isMaxRadiusReached = true;
+						hand->PalmRadius = circleRadius;
+						break;
+					}
+				}
+			}
+			circleRadius += 5;
+			circleContour.clear();
+		}
+	}
+	catch (Exception e)
+	{
+		cout << e.msg;
+	}
 }
 
 Mat HandRegistrationHandler::getRegistrationImg()
@@ -163,6 +205,7 @@ Mat HandRegistrationHandler::Filtering(Mat src)
 	vector<Mat> thresholds;
 	Mat out;
 	cvtColor(src, srcHSV, CV_RGB2HSV);
+	imshow("hsv", srcHSV);
 	for each (Scalar median in medians)
 	{
 		Scalar lower(median[0] - hmin, median[1] - smin, median[2] - vmin);
