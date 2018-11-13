@@ -1,13 +1,15 @@
 #include "stdafx.h"
 #include "HandRegistrationHandler.h"
 
+# define M_PI           3.14159265358979323846  /* pi */
+
 
 HandRegistrationHandler::HandRegistrationHandler()
 {
 	squareSize = 20;
 	bool lol;
 	lol = face_cascade.load(face_cascade_name);
-
+	TrackBars = new MyCamImage("TrackBar");
 }
 
 
@@ -24,13 +26,13 @@ cv:String name = camImg->getWindowName();
 	vmax = 255;
 	smin = 26;
 	smax = 26;
-	createTrackbar("Hmin", name, &hmin, 256, 0);
-	createTrackbar("Hmax", name, &hmax, 256, 0);
-	createTrackbar("Vmin", name, &vmin, 256, 0);
-	createTrackbar("Vmax", name, &vmax, 256, 0);
-	createTrackbar("Smin", name, &smin, 256, 0);
-	createTrackbar("Smaw", name, &smax, 256, 0);
-
+	createTrackbar("Hmin", TrackBars->getWindowName(), &hmin, 256, 0);
+	createTrackbar("Hmax", TrackBars->getWindowName(), &hmax, 256, 0);
+	createTrackbar("Vmin", TrackBars->getWindowName(), &vmin, 256, 0);
+	createTrackbar("Vmax", TrackBars->getWindowName(), &vmax, 256, 0);
+	createTrackbar("Smin", TrackBars->getWindowName(), &smin, 256, 0);
+	createTrackbar("Smaw", TrackBars->getWindowName(), &smax, 256, 0);
+	
 	camImg->readImage(&registrationImg);
 	AddSquareRegistration();
 	while (1) {
@@ -59,11 +61,13 @@ void HandRegistrationHandler::SetBackground(Rect handRect)
 
 void HandRegistrationHandler::RegisterHand()
 {
+	TrackBars->readImage();
+	TrackBars->showImage();
 	int i = 0;
 	for each (Rect rect in rois)
 	{
 		Mat registrationImgHSV;
-		cvtColor(registrationImg(rect), registrationImgHSV, CV_RGB2HSV);
+		cvtColor(registrationImg(rect), registrationImgHSV, CV_BGR2HSV);
 		Scalar median = mean(registrationImgHSV);
 		medians.push_back(median);
 		double a = median[0];
@@ -90,6 +94,7 @@ void HandRegistrationHandler::FindAndHideFace(Mat &src)
 	//rectangle(src, Face, Scalar(0), -2);
 }
 
+
 Mat HandRegistrationHandler::FilterHand(Mat src)
 {
 	Mat result;
@@ -101,6 +106,7 @@ Mat HandRegistrationHandler::FilterHand(Mat src)
 	//Erase noise with erode, and find contours
 	result = Filtering(src);
 	erode(result, result, element, Point(1, 1), 3);
+	//dilate(result, result, element, Point(1, 1), 2);
 	findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	//Draw filled contours
@@ -114,7 +120,7 @@ Mat HandRegistrationHandler::FilterHand(Mat src)
 		//drawContours(drawing, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point());
 	}
 	//Dilate result for counterbalance the previous erode
-	dilate(drawing, drawing, element, Point(1, 1), 8);
+	dilate(drawing, drawing, element, Point(1, 1), 3);
 	imshow("Contours", drawing);
 	cvtColor(drawing, result, CV_RGB2GRAY);
 	GaussianBlur(result, result, Size(3, 3), 1);
@@ -132,12 +138,13 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 {
 	Mat dist;
 	Point minLoc, maxLoc;
-	bool isMaxRadiusReached = false;
+	int MaxRadiusReachedNb = 0;
 	double min, max;
 	distanceTransform(src, dist, DIST_L2, 5);
 	normalize(dist, dist, 0, 1, NORM_MINMAX);
 	minMaxLoc(dist, &min, &max, &minLoc, &maxLoc);
 	hand->PalmCenter = maxLoc;
+	hand->PalmContour.clear();
 	if (draw)
 	{
 		circle(dist, maxLoc, 10, Scalar(255, 0, 0), -2);
@@ -147,26 +154,36 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 	vector<Point> circleContour;
 	try
 	{
-
-
-		while (!isMaxRadiusReached)
+		while (MaxRadiusReachedNb != 2)
 		{
-			ellipse2Poly(maxLoc, Size(circleRadius, circleRadius), 0, 0, 360, 1, circleContour);
-			for each (Point pt in circleContour)
+			
+			if (MaxRadiusReachedNb == 1)
 			{
-				if (pt.x > 0 && pt.y > 0 && pt.x < src.rows && pt.y < src.cols)
+				MaxRadiusReachedNb += 1;
+				circleRadius *= 1.6;
+			}
+			ellipse2Poly(maxLoc, Size(circleRadius, circleRadius), 0, 0, 360, 1, circleContour);
+			if (MaxRadiusReachedNb == 0)
+			{
+				for each (Point pt in circleContour)
 				{
-					unsigned char color = src.at<unsigned char>(pt);
-					
-					if (color != 255)
+					if (pt.x > 0 && pt.y > 0 && pt.x < src.rows && pt.y < src.cols)
 					{
-						isMaxRadiusReached = true;
-						hand->PalmRadius = circleRadius;
-						break;
+						unsigned char color = src.at<unsigned char>(pt);
+
+						if (color != 255)
+						{
+							MaxRadiusReachedNb += 1;
+							break;
+						}
 					}
 				}
 			}
-			circleRadius += 5;
+			hand->PalmRadius = circleRadius;
+			hand->PalmCircle = circleContour;
+			FindBoundaries(src, hand);
+			FindWristPoints(hand);
+			circleRadius += 2;
 			circleContour.clear();
 		}
 	}
@@ -176,6 +193,62 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 	}
 }
 
+
+void HandRegistrationHandler::FindBoundaries(Mat src, Hand * hand)
+{
+	vector<Point> boundPixels;
+	Rect roi;
+	Mat tmpMat;
+
+	for each (Point pt in hand->PalmCircle)
+	{
+		roi = Rect(pt.x - 1, pt.y - 1, 3, 3);
+		tmpMat = src(roi);
+		//Check if the pixel nieghboures contain black AND whith pixel
+		int nbBlackPixel = countNonZero(tmpMat);
+		if (nbBlackPixel > 0 && nbBlackPixel < 9)
+		{
+			hand->PalmContour.push_back(pt);
+		}
+	}
+}
+
+void HandRegistrationHandler::FindWristPoints(Hand * hand)
+{
+	Point wristPoint1;
+	Point wristPoint2;
+	hand->WristPoints.clear();
+	MathOperation helper;
+	float maxDist = 0;
+
+	for (int i = hand->PalmContour.size() - 1; i >= 1; i--)
+	{
+		float distP2P = helper.distanceP2P(hand->PalmContour[i], hand->PalmContour[i - 1]);
+		float angle = helper.angleBetween(hand->PalmContour[i], hand->PalmCenter, hand->PalmContour[i - 1]);
+		if (distP2P > maxDist && angle > 30 && angle < 60)
+		{
+			maxDist = distP2P;
+			wristPoint1 = hand->PalmContour[i];
+			wristPoint2 = hand->PalmContour[i - 1];
+		}
+	}
+	hand->WristPoints.push_back(wristPoint1);
+	hand->WristPoints.push_back(wristPoint2);
+}
+
+void HandRegistrationHandler::CreatePalmCircle(Hand *hand)
+{
+	vector<Point> palmMask;
+	for (int i = 0; i < 360; i++)
+	{ 
+ 
+		int x = hand->PalmRadius * (cos((i * M_PI) / 180)) +  hand->PalmCenter.x;
+		int y = hand->PalmRadius * (sin((i * M_PI) / 180)) + hand->PalmCenter.y;
+		palmMask.push_back(Point(x, y));
+	}
+	hand->PalmCircle = palmMask;
+}
+
 Mat HandRegistrationHandler::getRegistrationImg()
 {
 	return registrationImg;
@@ -183,12 +256,12 @@ Mat HandRegistrationHandler::getRegistrationImg()
 
 void HandRegistrationHandler::AddSquareRegistration()
 {
-	rois.push_back(Rect(registrationImg.cols / 5, registrationImg.rows / 5, squareSize, squareSize));
-	rois.push_back(Rect(registrationImg.cols / 7, registrationImg.rows / 3, squareSize, squareSize));
-	rois.push_back(Rect(registrationImg.cols / 4, registrationImg.rows / 3, squareSize, squareSize));
-	rois.push_back(Rect(registrationImg.cols / 5, registrationImg.rows / 2.5, squareSize, squareSize));
-	rois.push_back(Rect(registrationImg.cols / 4.5, registrationImg.rows / 2, squareSize, squareSize));
-	rois.push_back(Rect(registrationImg.cols / 6, registrationImg.rows / 2, squareSize, squareSize));
+	rois.push_back(Rect(registrationImg.cols - (registrationImg.cols / 5), registrationImg.rows / 5, squareSize, squareSize));
+	rois.push_back(Rect(registrationImg.cols - registrationImg.cols / 7, registrationImg.rows / 3, squareSize, squareSize));
+	rois.push_back(Rect(registrationImg.cols - registrationImg.cols / 4, registrationImg.rows / 3, squareSize, squareSize));
+	rois.push_back(Rect(registrationImg.cols - registrationImg.cols / 5, registrationImg.rows / 2.5, squareSize, squareSize));
+	rois.push_back(Rect(registrationImg.cols - registrationImg.cols / 4.5, registrationImg.rows / 2, squareSize, squareSize));
+	rois.push_back(Rect(registrationImg.cols - registrationImg.cols / 6, registrationImg.rows / 2, squareSize, squareSize));
 	;
 }
 
@@ -204,7 +277,7 @@ Mat HandRegistrationHandler::Filtering(Mat src)
 	Mat srcHSV;
 	vector<Mat> thresholds;
 	Mat out;
-	cvtColor(src, srcHSV, CV_RGB2HSV);
+	cvtColor(src, srcHSV, CV_BGR2HSV);
 	imshow("hsv", srcHSV);
 	for each (Scalar median in medians)
 	{

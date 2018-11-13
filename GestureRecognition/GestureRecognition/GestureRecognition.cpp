@@ -21,15 +21,16 @@ void GestureRecognition::setActualImage(MyCamImage *camImg)
 
 void GestureRecognition::launchHandRegistration()
 {
-	
+
 	registrationHandler.InitHandRegistration(actualCamImg);
 	registrationHandler.RegisterHand();
 }
 
 void GestureRecognition::launchGestureRecognition()
 {
+	bool reset = false;
 	threshImg = new MyCamImage("TreshImage");
-	while(1)
+	while (1)
 	{
 		//actualCamImg->readImage();
 		//actualCamImg->showImage();
@@ -39,6 +40,15 @@ void GestureRecognition::launchGestureRecognition()
 		if (waitKey(30) == 27) {
 			break;
 		}
+		if (waitKey(30) == 'r')
+		{
+			reset = true;
+			break;
+		}
+	}
+	if (reset)
+	{
+		launchHandRegistration();
 	}
 }
 
@@ -101,6 +111,9 @@ void GestureRecognition::performHandExtraction()
 		vector<vector<Vec4i> >defects(contours.size());
 		vector<vector<Point> >defectPoint(contours.size());
 		vector<vector<Point> >contours_poly(contours.size());
+		vector<Point> fingerMaskUp;
+		vector<Point> fingerMaskDown;
+		vector<Point> fingerMask;
 		Point2f rect_point[4];
 		vector<RotatedRect>minRect(contours.size());
 		vector<Rect> boundRect(contours.size());
@@ -110,7 +123,7 @@ void GestureRecognition::performHandExtraction()
 				convexityDefects(contours[i], hull[i], defects[i]);
 				if (indexOfBiggestContour == i || indexOfSecondContour == i) {
 					/*selectedContours.push_back(contours[i]);*/
-					drawContours(actualCamImg->capture, contours, i, Scalar(255, 255, 255), 1, 8);
+					//drawContours(actualCamImg->capture, contours, i, Scalar(255, 255, 255), 1, 8);
 					//drawContours(actualCamImg->capture, contours[i], i, Scalar(0, 0, 255), 1, 8);
 					minRect[i] = minAreaRect(contours[i]);
 					for (size_t k = 0;k < hull[i].size();k++) {
@@ -120,34 +133,69 @@ void GestureRecognition::performHandExtraction()
 					count = 0;
 					approxPolyDP(contours[i], contours_poly[i], 3, false);
 					boundRect[i] = boundingRect(contours_poly[i]);
-					//rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 0, 0), 2, 8, 0);
+					rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 0, 0), 2, 8, 0);
 					Rect tmp = boundRect[i];
 					int heigt = tmp.height;
 					int width = tmp.width;
 					for (size_t k = 0;k < defects[i].size();k++) {
-						
-							/*   int p_start=defects[i][k][0];   */
-							int p_end = defects[i][k][1];
-							int p_far = defects[i][k][2];
-							int p_start = defects[i][k][0];
-							int angle = angleBetween(contours[i][p_start], contours[i][p_far], contours[i][p_end]);
-							/*circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
-							circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
-							if (angle < 80 && defects[i][k][3] > 13* 256)
+
+						/*   int p_start=defects[i][k][0];   */
+						int p_end = defects[i][k][1];
+						int p_far = defects[i][k][2];
+						int p_start = defects[i][k][0];
+
+
+						int angle = angleBetween(contours[i][p_start], contours[i][p_far], contours[i][p_end]);
+						/*circle(actualCamImg->capture, contours[i][p_end], 3, Scalar(0, 255, 0), 2);
+						circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
+						if (angle < 80 && defects[i][k][3] > 13 * 256)
+						{
+							/*int p_endlast = p_end;
+							int p_farlast = p_far;
+							int p_startlast = p_start;
+							if (k > 0)
 							{
-								/*if (abs(p_end - p_start) < 0.4 * tmp.height)
-								{*/
-								//defectPoint[i].push_back(contours[i][p_far]);
-								
-								//putText(actualCamImg->capture, std::to_string(k), contours[i][p_end], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
-								/*circle(actualCamImg->capture, contours[i][p_far], 3, Scalar(255, 0, 0), 2);
-								circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
-								count++;
-								//}
+								p_endlast = defects[i][k - 1][1];
+								p_farlast = defects[i][k - 1][2];
+								p_startlast = defects[i][k - 1][0];
+							}*/
+							/*if (hands[0].FingerTips.size() == 0)
+							{
+								hands[0].FingerTips.push_back(contours[i][p_end]);
 							}
-							
+							else
+							{*/
+							hands[0].FingerTips.push_back(contours[i][p_start]);
+							hands[0].FingerTips.push_back(contours[i][p_end]);
+							/*fingerMaskUp.push_back(contours[i][p_startlast]);
+							fingerMaskUp.push_back(contours[i][p_endlast]);*/
+							fingerMaskUp.push_back(contours[i][p_start]);
+							fingerMaskUp.push_back(contours[i][p_end]);
+							//fingerMaskUp.push_back(contours[i][p_s]);
+							fingerMaskDown.push_back(contours[i][p_far]);
+							//fingerMaskDown.push_back(contours[i][p_farlast]);
+							//}
+							/*if (abs(p_end - p_start) < 0.4 * tmp.height)
+							{*/
+							//defectPoint[i].push_back(contours[i][p_far]);
+
+							//putText(actualCamImg->capture, std::to_string(k), contours[i][p_end], CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
+							/*circle(actualCamImg->capture, contours[i][p_far], 3, Scalar(255, 0, 0), 2);
+							circle(actualCamImg->capture, contours[i][p_start], 3, Scalar(0, 0, 255), 2);*/
+							if (count < 4)
+							{
+								count++;
+							}
+							//}
+						}
+
 					}
-					putText(actualCamImg->capture, std::to_string(count + 1), Point((boundRect[i].height + boundRect[i].x) / 2, (boundRect[i].width + boundRect[i].y) /2), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(0, 0, 255), 2, 8, false);
+					reverse(fingerMaskDown.begin(), fingerMaskDown.end());
+					fingerMask.reserve(fingerMaskDown.size() + fingerMaskUp.size());
+					fingerMask.insert(fingerMask.end(), fingerMaskUp.begin(), fingerMaskUp.end());
+					fingerMask.insert(fingerMask.end(), fingerMaskDown.begin(), fingerMaskDown.end());
+					polylines(actualCamImg->capture, fingerMask, true, Scalar(0, 0, 255), 5);
+					putText(actualCamImg->capture, std::to_string(count + 1), Point((boundRect[i].height + boundRect[i].x) / 2, (boundRect[i].width + boundRect[i].y) / 2), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(0, 0, 255), 2, 8, false);
 					if (count == 2)
 						strcpy_s(a, "One");
 					else if (count == 3)
@@ -156,23 +204,37 @@ void GestureRecognition::performHandExtraction()
 						strcpy_s(a, "Three");
 					else if (count == 5)
 						strcpy_s(a, "Four");
-					else if (count == 6)
+					else if (count >= 6)
 						strcpy_s(a, "Five");
-					else
-						strcpy_s(a, "Welcome !!");
+
 
 					//putText(actualCamImg->capture, a, Point(70, 70), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 0, 0), 2, 8, false);
 					/*drawContours(threshImg->capture, contours, i, Scalar(255, 255, 0), 2, 8, vector<Vec4i>(), 0, Point());
 					drawContours(threshImg->capture, hullPoint, i, Scalar(255, 255, 0), 1, 8, vector<Vec4i>(), 0, Point());
 					drawContours(actualCamImg->capture, hullPoint, i, Scalar(0, 0, 255), 2, 8, vector<Vec4i>(), 0, Point());*/
-					minRect[i].points(rect_point);
-				
-					
-					for (size_t k = 0;k < 4;k++) {
+					/*minRect[i].points(rect_point);*/
+
+
+					/*for (size_t k = 0;k < 4;k++) {
 						line(actualCamImg->capture, rect_point[k], rect_point[(k + 1) % 4], Scalar(0, 255, 0), 2, 8);
+					}*/
+					//for each (Point pt in hands[0].FingerTips)
+					//{
+					//	circle(actualCamImg->capture, pt, 5, Scalar(255, 0, 0), -2);
+					//	/*line(actualCamImg->capture, hands[0].PalmCenter, pt, Scalar(0, 255, 0), 2, 8);*/
+					//}
+					for each(Point pt in hands[0].PalmCircle)
+					{
+						circle(actualCamImg->capture, pt, 1, Scalar(255, 0, 255), -2);
 					}
+					for each(Point pt in hands[0].PalmContour)
+					{
+						circle(actualCamImg->capture, pt, 1, Scalar(0, 255, 0), -2);
+					}
+					hands[0].FingerTips.clear();
 					circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
-					circle(actualCamImg->capture, hands[0].PalmCenter, hands[0].PalmRadius, Scalar(0, 255, 0), 2);
+					line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
+					//circle(actualCamImg->capture, hands[0].PalmCenter, hands[0].PalmRadius, Scalar(0, 255, 0), 2);
 				}
 			}
 		}

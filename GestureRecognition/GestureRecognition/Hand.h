@@ -19,12 +19,17 @@ public:
 	Rect HandRect;
 	RotatedRect HandRotatedRect;
 	vector<Point> HandContour;
+	vector<Point> PalmCircle;
+	vector<Point> PalmContour;
 	Point PalmCenter;
 	size_t PalmRadius;
 	vector<vector<Point>> FingersContour;
 	size_t NbFingerUp;
+	vector<Point>  FingerTips;
+	vector<Point> WristPoints;
 
 private:
+
 
 
 };
