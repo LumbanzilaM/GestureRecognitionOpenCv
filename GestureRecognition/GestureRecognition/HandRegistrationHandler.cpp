@@ -67,7 +67,7 @@ void HandRegistrationHandler::RegisterHand()
 	for each (Rect rect in rois)
 	{
 		Mat registrationImgHSV;
-		cvtColor(registrationImg(rect), registrationImgHSV, CV_BGR2HSV);
+		cvtColor(registrationImg(rect), registrationImgHSV, CV_RGB2HSV);
 		Scalar median = mean(registrationImgHSV);
 		medians.push_back(median);
 		double a = median[0];
@@ -154,14 +154,8 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 	vector<Point> circleContour;
 	try
 	{
-		while (MaxRadiusReachedNb != 2)
+		while (MaxRadiusReachedNb != 1)
 		{
-			
-			if (MaxRadiusReachedNb == 1)
-			{
-				MaxRadiusReachedNb += 1;
-				circleRadius *= 1.6;
-			}
 			ellipse2Poly(maxLoc, Size(circleRadius, circleRadius), 0, 0, 360, 1, circleContour);
 			if (MaxRadiusReachedNb == 0)
 			{
@@ -181,11 +175,11 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 			}
 			hand->PalmRadius = circleRadius;
 			hand->PalmCircle = circleContour;
-			FindBoundaries(src, hand);
-			FindWristPoints(hand);
-			circleRadius += 2;
+			circleRadius += 10;
 			circleContour.clear();
 		}
+		FindBoundaries(src, hand);
+		FindWristPoints(hand);
 	}
 	catch (Exception e)
 	{
@@ -202,16 +196,45 @@ void HandRegistrationHandler::FindBoundaries(Mat src, Hand * hand)
 
 	for each (Point pt in hand->PalmCircle)
 	{
-		roi = Rect(pt.x - 1, pt.y - 1, 3, 3);
-		tmpMat = src(roi);
-		//Check if the pixel nieghboures contain black AND whith pixel
-		int nbBlackPixel = countNonZero(tmpMat);
-		if (nbBlackPixel > 0 && nbBlackPixel < 9)
-		{
-			hand->PalmContour.push_back(pt);
-		}
+		//roi = Rect(pt.x - 1, pt.y - 1, 3, 3);
+		//tmpMat = src(roi);
+		////Check if the pixel nieghboures contain black AND whith pixel
+		//int nbBlackPixel = countNonZero(tmpMat);
+		//if (nbBlackPixel > 0 && nbBlackPixel < 9)
+		//{
+		//	hand->PalmContour.push_back(pt);
+		//}
+		FindClosestBondary(src, hand, pt);
 	}
 }
+
+void HandRegistrationHandler::FindClosestBondary(Mat src, Hand* hand, Point centerPoint)
+{
+	bool MaxRadiusReached = false;
+	int circleRadius = 0;
+	vector<Point> circleContour;
+	imshow("SrcBoundary", src);
+	while (!MaxRadiusReached)
+	{
+		ellipse2Poly(centerPoint, Size(circleRadius, circleRadius), 0, 0, 360, 1, circleContour);
+		for each (Point pt in circleContour)
+		{
+			if (pt.x > 0 && pt.y > 0 && pt.x < src.rows && pt.y < src.cols)
+			{
+				unsigned char color = src.at<unsigned char>(pt);
+
+				if (color != 255)
+				{
+					MaxRadiusReached = true ;
+					hand->PalmContour.push_back(pt);
+					break;
+				}
+			}
+		}
+		circleRadius+=5;
+	}
+}
+
 
 void HandRegistrationHandler::FindWristPoints(Hand * hand)
 {
@@ -277,7 +300,7 @@ Mat HandRegistrationHandler::Filtering(Mat src)
 	Mat srcHSV;
 	vector<Mat> thresholds;
 	Mat out;
-	cvtColor(src, srcHSV, CV_BGR2HSV);
+	cvtColor(src, srcHSV, CV_RGB2HSV);
 	imshow("hsv", srcHSV);
 	for each (Scalar median in medians)
 	{

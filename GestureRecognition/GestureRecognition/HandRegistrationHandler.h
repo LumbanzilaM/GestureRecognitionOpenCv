@@ -24,6 +24,7 @@ public:
 	void RegisterHand();
 	void FindAndHideFace(Mat &src);
 	void FindBoundaries(Mat src, Hand *hand);
+	void FindClosestBondary(Mat src, Hand * hand, Point pt);
 	void FindWristPoints(Hand *hand);
 	Mat FilterHand(Mat src);
 	vector<Mat> FindHands(Mat src);

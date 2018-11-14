@@ -194,7 +194,7 @@ void GestureRecognition::performHandExtraction()
 					fingerMask.reserve(fingerMaskDown.size() + fingerMaskUp.size());
 					fingerMask.insert(fingerMask.end(), fingerMaskUp.begin(), fingerMaskUp.end());
 					fingerMask.insert(fingerMask.end(), fingerMaskDown.begin(), fingerMaskDown.end());
-					polylines(actualCamImg->capture, fingerMask, true, Scalar(0, 0, 255), 5);
+					//polylines(actualCamImg->capture, fingerMask, true, Scalar(0, 0, 255), 5);
 					putText(actualCamImg->capture, std::to_string(count + 1), Point((boundRect[i].height + boundRect[i].x) / 2, (boundRect[i].width + boundRect[i].y) / 2), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(0, 0, 255), 2, 8, false);
 					if (count == 2)
 						strcpy_s(a, "One");
@@ -227,10 +227,11 @@ void GestureRecognition::performHandExtraction()
 					{
 						circle(actualCamImg->capture, pt, 1, Scalar(255, 0, 255), -2);
 					}
-					for each(Point pt in hands[0].PalmContour)
+					/*for each(Point pt in hands[0].PalmContour)
 					{
 						circle(actualCamImg->capture, pt, 1, Scalar(0, 255, 0), -2);
-					}
+					}*/
+					polylines(actualCamImg->capture, hands[0].PalmContour, true, Scalar(0, 0, 255), 1);
 					hands[0].FingerTips.clear();
 					circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
 					line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
