@@ -234,7 +234,10 @@ void GestureRecognition::performHandExtraction()
 					polylines(actualCamImg->capture, hands[0].PalmContour, true, Scalar(0, 0, 255), 1);
 					hands[0].FingerTips.clear();
 					circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
-					line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
+					if (hands[0].WristPoints.size() > 1)
+					{
+						line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
+					}
 					//circle(actualCamImg->capture, hands[0].PalmCenter, hands[0].PalmRadius, Scalar(0, 255, 0), 2);
 				}
 			}
