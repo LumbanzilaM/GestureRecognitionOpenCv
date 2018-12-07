@@ -22,7 +22,7 @@ void HandRegistrationHandler::InitHandRegistration(MyCamImage *camImg)
 cv:String name = camImg->getWindowName();
 	hmin = 16;
 	hmax = 16;
-	vmin = 0;
+	vmin = 10;
 	vmax = 255;
 	smin = 26;
 	smax = 26;
@@ -248,7 +248,7 @@ void HandRegistrationHandler::FindWristPoints(Hand * hand)
 	{
 		float distP2P = helper.distanceP2P(hand->PalmContour[i], hand->PalmContour[i - 1]);
 		float angle = helper.angleBetween(hand->PalmContour[i], hand->PalmCenter, hand->PalmContour[i - 1]);
-		if (distP2P > maxDist && angle > 30 && angle < 60)
+		if (distP2P > maxDist)
 		{
 			maxDist = distP2P;
 			wristPoint1 = hand->PalmContour[i];
