@@ -22,7 +22,7 @@ void HandRegistrationHandler::InitHandRegistration(MyCamImage *camImg)
 cv:String name = camImg->getWindowName();
 	hmin = 16;
 	hmax = 16;
-	vmin = 10;
+	vmin = 0;
 	vmax = 255;
 	smin = 26;
 	smax = 26;
@@ -32,7 +32,7 @@ cv:String name = camImg->getWindowName();
 	createTrackbar("Vmax", TrackBars->getWindowName(), &vmax, 256, 0);
 	createTrackbar("Smin", TrackBars->getWindowName(), &smin, 256, 0);
 	createTrackbar("Smaw", TrackBars->getWindowName(), &smax, 256, 0);
-	
+
 	camImg->readImage(&registrationImg);
 	AddSquareRegistration();
 	while (1) {
@@ -168,6 +168,8 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 						if (color != 255)
 						{
 							MaxRadiusReachedNb += 1;
+							circleRadius = circleRadius * 1.2;
+							ellipse2Poly(maxLoc, Size(circleRadius, circleRadius), 0, 0, 360, 1, circleContour);
 							break;
 						}
 					}
@@ -211,27 +213,40 @@ void HandRegistrationHandler::FindBoundaries(Mat src, Hand * hand)
 void HandRegistrationHandler::FindClosestBondary(Mat src, Hand* hand, Point centerPoint)
 {
 	bool MaxRadiusReached = false;
-	int circleRadius = 0;
+	int circleRadius = 1;
+	Mat tmpMat;
+	int angle = 1;
 	vector<Point> circleContour;
 	imshow("SrcBoundary", src);
-	while (!MaxRadiusReached)
+	while (angle < 360)
 	{
-		ellipse2Poly(centerPoint, Size(circleRadius, circleRadius), 0, 0, 360, 1, circleContour);
-		for each (Point pt in circleContour)
+		int x = (cos((angle * M_PI) / 180)) * circleRadius + centerPoint.x;
+		int y = (sin((angle * M_PI) / 180)) * circleRadius + centerPoint.y;
+		Point pt = Point(x, y);
+		if (x > 0 && y > 0 && x < src.rows && y < src.cols)
 		{
-			if (pt.x > 0 && pt.y > 0 && pt.x < src.rows && pt.y < src.cols)
-			{
-				unsigned char color = src.at<unsigned char>(pt);
+			unsigned char color = src.at<unsigned char>(pt);
 
-				if (color != 255)
+			if (color == 0)
+			{
+				Rect roi = Rect(pt.x - 1, pt.y - 1, 3, 3);
+				tmpMat = src(roi);
+				//Check if the pixel nieghboures contain black AND whith pixel
+				int nbBlackPixel = countNonZero(tmpMat);
+				if (nbBlackPixel > 0 && nbBlackPixel < 9)
 				{
-					MaxRadiusReached = true ;
+					MaxRadiusReached = true;
 					hand->PalmContour.push_back(pt);
 					break;
 				}
 			}
 		}
-		circleRadius+=5;
+		angle += 1;
+		if (angle == 360)
+		{
+			circleRadius += 5;
+			angle = 1;
+		}
 	}
 }
 
@@ -248,7 +263,7 @@ void HandRegistrationHandler::FindWristPoints(Hand * hand)
 	{
 		float distP2P = helper.distanceP2P(hand->PalmContour[i], hand->PalmContour[i - 1]);
 		float angle = helper.angleBetween(hand->PalmContour[i], hand->PalmCenter, hand->PalmContour[i - 1]);
-		if (distP2P > maxDist)
+		if (distP2P > maxDist && angle > 30 && angle < 60)
 		{
 			maxDist = distP2P;
 			wristPoint1 = hand->PalmContour[i];
@@ -263,9 +278,9 @@ void HandRegistrationHandler::CreatePalmCircle(Hand *hand)
 {
 	vector<Point> palmMask;
 	for (int i = 0; i < 360; i++)
-	{ 
- 
-		int x = hand->PalmRadius * (cos((i * M_PI) / 180)) +  hand->PalmCenter.x;
+	{
+
+		int x = hand->PalmRadius * (cos((i * M_PI) / 180)) + hand->PalmCenter.x;
 		int y = hand->PalmRadius * (sin((i * M_PI) / 180)) + hand->PalmCenter.y;
 		palmMask.push_back(Point(x, y));
 	}
