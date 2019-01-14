@@ -18,6 +18,7 @@ private:
 	void prepareHandExtraction();
 	float distanceP2P(Point a, Point b);
 	float angleBetween(const Point &v1, const Point &origin, const Point &v2);
+	void Draw();
 	void performHandExtraction();
 	void writeGesture(String gesture);
 

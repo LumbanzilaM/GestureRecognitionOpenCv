@@ -31,12 +31,18 @@ public:
 	void FindPalmCenter(Mat src, Hand *hand, bool draw = true);
 	Mat getRegistrationImg();
 	Rect Face;
+	Mat ExtractPalm(Mat src, Hand* hand);
+	Mat RotateHand(Mat src, Hand * hand);
+	Mat ExtractFingers(Mat src, Hand* hand);
+
+
 
 private : 
 	void AddSquareRegistration();
 	void InitFaceDetection();
 	void CreatePalmCircle(Hand *hand);
 	Mat Filtering(Mat src);
+	vector<vector<Point>> FindTwoBiggestContoursBBox(Mat src);
 
 	MyCamImage *TrackBars;
 	Mat hist;

@@ -70,9 +70,9 @@ void HandRegistrationHandler::RegisterHand()
 		cvtColor(registrationImg(rect), registrationImgHSV, CV_RGB2HSV);
 		Scalar median = mean(registrationImgHSV);
 		medians.push_back(median);
-		double a = median[0];
-		double b = median[1];
-		double c = median[2];
+		double a = 255;
+		double b = 94;
+		double c = 37;
 		i++;
 	}
 	//FindAndHideFace(registrationImg);
@@ -105,7 +105,7 @@ Mat HandRegistrationHandler::FilterHand(Mat src)
 
 	//Erase noise with erode, and find contours
 	result = Filtering(src);
-	erode(result, result, element, Point(1, 1), 3);
+	/*erode(result, result, element, Point(1, 1), 3);*/
 	//dilate(result, result, element, Point(1, 1), 2);
 	findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
@@ -120,13 +120,17 @@ Mat HandRegistrationHandler::FilterHand(Mat src)
 		//drawContours(drawing, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point());
 	}
 	//Dilate result for counterbalance the previous erode
-	dilate(drawing, drawing, element, Point(1, 1), 3);
-	imshow("Contours", drawing);
+	//dilate(drawing, drawing, element, Point(1, 1), 3);
+	/*imshow("Contours", drawing);*/
 	cvtColor(drawing, result, CV_RGB2GRAY);
 	GaussianBlur(result, result, Size(3, 3), 1);
 	medianBlur(result, result, 7);
-	//imshow("result", result);
-	return result;
+	// Get hand contours and draw them on a new black mat to erase noise arround it
+	vector<vector<Point>> handContours = FindTwoBiggestContoursBBox(result);
+	Mat ret = Mat(result.rows, result.cols, CV_8U, Scalar(0, 0, 0));
+	drawContours(ret, handContours, 0, Scalar(255), -1);
+	imshow("ret", ret);
+	return ret;
 }
 
 vector<Mat> HandRegistrationHandler::FindHands(Mat src)
@@ -148,7 +152,7 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 	if (draw)
 	{
 		circle(dist, maxLoc, 10, Scalar(255, 0, 0), -2);
-		imshow("dist", dist);
+		/*imshow("dist", dist);*/
 	}
 	size_t circleRadius = 0;
 	vector<Point> circleContour;
@@ -182,6 +186,8 @@ void HandRegistrationHandler::FindPalmCenter(Mat src, Hand *hand, bool draw)
 		}
 		FindBoundaries(src, hand);
 		FindWristPoints(hand);
+		ExtractPalm(src, hand);
+		ExtractFingers(src, hand);
 	}
 	catch (Exception e)
 	{
@@ -210,6 +216,89 @@ void HandRegistrationHandler::FindBoundaries(Mat src, Hand * hand)
 	}
 }
 
+Mat HandRegistrationHandler::ExtractPalm(Mat src, Hand* hand)
+{
+	Mat palm = Mat(src.rows, src.cols, CV_8U, Scalar(0, 0, 0));
+	std::vector<std::vector<Point>> contours;
+	int lol = hand->PalmContour.size();
+	contours.push_back(hand->PalmContour);
+
+	drawContours(palm, contours, 0, Scalar(255), -1);
+	imshow("Palm", palm);
+	return palm;
+}
+
+Mat HandRegistrationHandler::RotateHand(Mat src, Hand *hand)
+{
+	MathOperation op;
+	float angle = 0 - (90 - op.angleBetween(hand->WristPoints[2], hand->PalmCenter, Point(src.rows, hand->PalmCenter.y)));
+	hand->RotationAngle = angle;
+	Mat matrix = getRotationMatrix2D(hand->PalmCenter, angle, 1);
+	Mat rotated;
+	warpAffine(src, rotated, matrix, src.size());
+	Rect myROI(0, hand[0].WristPoints[2].y, src.rows, src.cols);
+	rectangle(rotated, myROI, Scalar(0), -1);
+	imshow("rotated hand", rotated);
+	return rotated;
+}
+
+Mat HandRegistrationHandler::ExtractFingers(Mat src, Hand * hand)
+{
+	MathOperation op;
+	Mat fonly = Mat(src.rows, src.cols, CV_8UC3, Scalar(0));
+	vector<vector<Point>> contours;
+	Mat fingers = src.clone();
+	std::vector<std::vector<Point>> palmContours;
+	palmContours.push_back(hand->PalmContour);
+
+	drawContours(fingers, palmContours, 0, Scalar(0), -1);
+	
+	fingers = RotateHand(fingers, hand);
+	
+	/*Mat element = getStructuringElement(MORPH_ELLIPSE, Size(3, 3), Point(-1, -1));
+	erode(fingers, fingers, element, Point(1, 1), 2);*/
+	vector<Vec4i>hierarchy;
+	//Find fingers bounding box
+	findContours(fingers, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point());
+	hand->FingersDefectsTop.clear();
+	hand->FingersDefectsBot.clear();
+	hand->FingersContour.clear();
+	hand->FingersCenter.clear();
+	for (size_t i = 0;i < contours.size();i++)
+	{
+		if (contours[i].size() > 30)
+		{
+			Rect bounding = boundingRect(contours[i]);
+			RotatedRect rect = minAreaRect(contours[i]);
+			hand->FingersRotatedRect.push_back(rect);
+			hand->FingersRect.push_back(bounding);
+			hand->FingersContour.push_back(contours[i]);
+
+			Point2f rp[4]; 
+			rect.points(rp);
+			sort(rp, rp + 4, op.comp);
+			
+			hand->FingersDefectsTop.push_back(Point((rp[0].x + rp[1].x) / 2, (rp[0].y + rp[1].y) / 2));
+			hand->FingersDefectsBot.push_back(Point((rp[2].x + rp[3].x) / 2, (rp[2].y + rp[3].y) / 2));
+			hand->FingersCenter.push_back(rect.center);
+		}
+	}
+
+	//Draw finger image
+	
+	circle(fonly, hand->PalmCenter, 5, Scalar(255,0,0), 3);
+	for (int i = 0; i < hand->FingersDefectsBot.size(); i++)
+	{
+		circle(fonly, hand->FingersDefectsTop[i], 5, Scalar(0,255,0), -2);
+		circle(fonly, hand->FingersDefectsTop[i], 5, Scalar(0, 0, 255), -2);
+		line(fonly, hand->FingersDefectsBot[i], hand->FingersCenter[i], Scalar(0, 255, 0));
+		line(fonly, hand->FingersDefectsBot[i], hand->PalmCenter, Scalar(0, 255, 0));
+	}
+	drawContours(fonly, hand->FingersContour, -1, Scalar(255), 2);
+	imshow("fingers", fonly);
+	return fingers;
+}
+
 void HandRegistrationHandler::FindClosestBondary(Mat src, Hand* hand, Point centerPoint)
 {
 	bool MaxRadiusReached = false;
@@ -217,7 +306,7 @@ void HandRegistrationHandler::FindClosestBondary(Mat src, Hand* hand, Point cent
 	Mat tmpMat;
 	int angle = 1;
 	vector<Point> circleContour;
-	imshow("SrcBoundary", src);
+	//imshow("SrcBoundary", src);
 	while (angle < 360)
 	{
 		int x = (cos((angle * M_PI) / 180)) * circleRadius + centerPoint.x;
@@ -272,6 +361,8 @@ void HandRegistrationHandler::FindWristPoints(Hand * hand)
 	}
 	hand->WristPoints.push_back(wristPoint1);
 	hand->WristPoints.push_back(wristPoint2);
+	//Get the midle point of the wrist line
+	hand->WristPoints.push_back((wristPoint1 + wristPoint2)*0.5);
 }
 
 void HandRegistrationHandler::CreatePalmCircle(Hand *hand)
@@ -291,6 +382,7 @@ Mat HandRegistrationHandler::getRegistrationImg()
 {
 	return registrationImg;
 }
+
 
 void HandRegistrationHandler::AddSquareRegistration()
 {
@@ -316,7 +408,7 @@ Mat HandRegistrationHandler::Filtering(Mat src)
 	vector<Mat> thresholds;
 	Mat out;
 	cvtColor(src, srcHSV, CV_RGB2HSV);
-	imshow("hsv", srcHSV);
+	/*imshow("hsv", srcHSV);*/
 	for each (Scalar median in medians)
 	{
 		Scalar lower(median[0] - hmin, median[1] - smin, median[2] - vmin);
@@ -334,4 +426,33 @@ Mat HandRegistrationHandler::Filtering(Mat src)
 	imshow("result before manipulation", out);
 	thresholds.clear();
 	return out;
+}
+
+vector<vector<Point>> HandRegistrationHandler::FindTwoBiggestContoursBBox(Mat src)
+{
+	vector<vector<Point>> contours;
+	vector<Vec4i>hierarchy;
+	vector<vector<Point>> ret;
+	findContours(src, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point());
+	size_t indexOfBiggestContour = -1;
+	size_t sizeOfBiggestContour = 0;
+	size_t indexOfSecondContour = -1;
+	size_t sizeOfSecondContour = 0;
+
+	for (size_t i = 0; i < contours.size(); i++) {
+
+		if (contours[i].size() > sizeOfBiggestContour) {
+			sizeOfSecondContour = sizeOfBiggestContour;
+			indexOfSecondContour = indexOfBiggestContour;
+			sizeOfBiggestContour = contours[i].size();
+			indexOfBiggestContour = i;
+		}
+	}
+	if (indexOfBiggestContour != -1)
+	ret.push_back(contours[indexOfBiggestContour]);
+
+	//Manage only one hand for now
+	/*if (indexOfSecondContour != -1)
+	ret.push_back(contours[indexOfSecondContour]);*/
+	return ret;
 }

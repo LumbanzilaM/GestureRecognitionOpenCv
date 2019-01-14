@@ -32,10 +32,8 @@ void GestureRecognition::launchGestureRecognition()
 	threshImg = new MyCamImage("TreshImage");
 	while (1)
 	{
-		//actualCamImg->readImage();
-		//actualCamImg->showImage();
 		prepareHandExtraction();
-		performHandExtraction();
+		Draw();
 		actualCamImg->showImage();
 		if (waitKey(30) == 27) {
 			break;
@@ -84,6 +82,27 @@ float GestureRecognition::angleBetween(const Point &s, const Point &f, const Poi
 	return angle;
 }
 
+void GestureRecognition::Draw()
+{
+	for each(Point pt in hands[0].PalmCircle)
+	{
+		circle(actualCamImg->capture, pt, 1, Scalar(255, 0, 255), -2);
+	}
+	polylines(actualCamImg->capture, hands[0].PalmContour, true, Scalar(0, 0, 255), 1);
+	hands[0].FingerTips.clear();
+	circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
+	if (hands[0].WristPoints.size() > 1)
+	{
+		line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
+	}
+	int a = hands[0].RotationAngle;
+	stringstream ss;
+	ss << a;
+	string str = ss.str();
+	putText(actualCamImg->capture, str, hands[0].PalmCenter, CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
+}
+
+//Deprecated
 void GestureRecognition::performHandExtraction()
 {
 	int count = 0;
@@ -231,6 +250,7 @@ void GestureRecognition::performHandExtraction()
 					{
 						circle(actualCamImg->capture, pt, 1, Scalar(0, 255, 0), -2);
 					}*/
+					
 					polylines(actualCamImg->capture, hands[0].PalmContour, true, Scalar(0, 0, 255), 1);
 					hands[0].FingerTips.clear();
 					circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
@@ -238,6 +258,11 @@ void GestureRecognition::performHandExtraction()
 					{
 						line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
 					}
+					int a = hands[0].RotationAngle;
+					stringstream ss;
+					ss << a;
+					string str = ss.str();
+					putText(actualCamImg->capture, str, hands[0].PalmCenter, CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
 					//circle(actualCamImg->capture, hands[0].PalmCenter, hands[0].PalmRadius, Scalar(0, 255, 0), 2);
 				}
 			}

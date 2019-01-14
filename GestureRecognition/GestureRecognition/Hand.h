@@ -27,6 +27,13 @@ public:
 	size_t NbFingerUp;
 	vector<Point>  FingerTips;
 	vector<Point> WristPoints;
+	vector<Rect> FingersRect;
+	vector<RotatedRect> FingersRotatedRect;
+	vector<Point> FingersCenter;
+	vector<Point> FingersDefectsBot;
+	vector<Point> FingersDefectsTop;
+	int ThumbIdx = -1;
+	float RotationAngle;
 
 private:
 

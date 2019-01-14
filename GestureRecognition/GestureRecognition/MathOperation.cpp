@@ -28,3 +28,23 @@ float MathOperation::angleBetween(const Point &s, const Point & f, const Point &
 	angle = angle * 180 / M_PI;
 	return angle;
 }
+
+
+Point MathOperation::RotatePoint(const cv::Point2f& p, float rad)
+{
+	const float x = std::cos(rad) * p.x - std::sin(rad) * p.y;
+	const float y = std::sin(rad) * p.x + std::cos(rad) * p.y;
+
+	const cv::Point2f rot_p(x, y);
+	return rot_p;
+}
+
+Point MathOperation::RotatePoint(const cv::Point2f& cen_pt, const cv::Point2f& p, float angle)
+{
+	float rad = (angle * M_PI) / 180;
+	const cv::Point2f trans_pt = p - cen_pt;
+	const cv::Point2f rot_pt = RotatePoint(trans_pt, rad);
+	const cv::Point2f fin_pt = rot_pt + cen_pt;
+
+	return fin_pt;
+}
