@@ -33,6 +33,7 @@ void GestureRecognition::launchGestureRecognition()
 	while (1)
 	{
 		prepareHandExtraction();
+		FindGesture();
 		Draw();
 		actualCamImg->showImage();
 		if (waitKey(30) == 27) {
@@ -64,6 +65,12 @@ void GestureRecognition::prepareHandExtraction()
 	registrationHandler.FindPalmCenter(threshImg->capture, &hands[0], true);
 	threshImg->showImage();
 
+}
+
+void GestureRecognition::FindGesture()
+{
+	string gesture = gestureLib.FindGesture(hands[0]);
+	putText(actualCamImg->capture, gesture, Point(100,100), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 0, 255), 2, 8, false);
 }
 
 float GestureRecognition::distanceP2P(Point a, Point b)

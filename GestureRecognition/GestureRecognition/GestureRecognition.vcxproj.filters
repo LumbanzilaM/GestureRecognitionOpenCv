@@ -16,6 +16,12 @@
     <Filter Include="Fichiers sources\FaceRecognitionTrainingFiles">
       <UniqueIdentifier>{14797f43-e38e-4385-9831-ca14fbd6ab61}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\Gestures">
+      <UniqueIdentifier>{f5fac726-7768-41ff-b96a-23373a5cf4a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers sources\Gesture">
+      <UniqueIdentifier>{b57f6432-9458-4f15-bf38-f7c07d047e20}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -39,6 +45,21 @@
     <ClInclude Include="MathOperation.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="AGesture.h">
+      <Filter>Fichiers d%27en-tête\Gestures</Filter>
+    </ClInclude>
+    <ClInclude Include="ValidateGesture.h">
+      <Filter>Fichiers d%27en-tête\Gestures</Filter>
+    </ClInclude>
+    <ClInclude Include="GestureLibrary.h">
+      <Filter>Fichiers d%27en-tête\Gestures</Filter>
+    </ClInclude>
+    <ClInclude Include="BackGesture.h">
+      <Filter>Fichiers d%27en-tête\Gestures</Filter>
+    </ClInclude>
+    <ClInclude Include="NextRightGesture.h">
+      <Filter>Fichiers d%27en-tête\Gestures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -61,6 +82,21 @@
     </ClCompile>
     <ClCompile Include="MathOperation.cpp">
       <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="AGesture.cpp">
+      <Filter>Fichiers sources\Gesture</Filter>
+    </ClCompile>
+    <ClCompile Include="ValidateGesture.cpp">
+      <Filter>Fichiers sources\Gesture</Filter>
+    </ClCompile>
+    <ClCompile Include="GestureLibrary.cpp">
+      <Filter>Fichiers sources\Gesture</Filter>
+    </ClCompile>
+    <ClCompile Include="BackGesture.cpp">
+      <Filter>Fichiers sources\Gesture</Filter>
+    </ClCompile>
+    <ClCompile Include="NextRightGesture.cpp">
+      <Filter>Fichiers sources\Gesture</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -99,14 +99,19 @@ Mat HandRegistrationHandler::FilterHand(Mat src)
 {
 	Mat result;
 	Mat srcHSV;
+	Mat canny;
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	Mat element = getStructuringElement(MORPH_ELLIPSE, Size(3, 3), Point(-1, -1));
 
 	//Erase noise with erode, and find contours
 	result = Filtering(src);
-	/*erode(result, result, element, Point(1, 1), 3);*/
-	//dilate(result, result, element, Point(1, 1), 2);
+	erode(result, result, element, Point(1, 1), 3);
+	Canny(result, canny, 0, 255);
+	dilate(canny, canny, element, Point(1, 1), 5);
+	imshow("Afeter canny", canny);
+	dilate(result, result, element, Point(1, 1), 5);
+	imshow("Afeter dilate", result);
 	findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	//Draw filled contours
@@ -266,7 +271,7 @@ Mat HandRegistrationHandler::ExtractFingers(Mat src, Hand * hand)
 	hand->FingersCenter.clear();
 	for (size_t i = 0;i < contours.size();i++)
 	{
-		if (contours[i].size() > 30)
+		if (contours[i].size() > 50)
 		{
 			Rect bounding = boundingRect(contours[i]);
 			RotatedRect rect = minAreaRect(contours[i]);
@@ -282,6 +287,16 @@ Mat HandRegistrationHandler::ExtractFingers(Mat src, Hand * hand)
 			hand->FingersDefectsBot.push_back(Point((rp[2].x + rp[3].x) / 2, (rp[2].y + rp[3].y) / 2));
 			hand->FingersCenter.push_back(rect.center);
 		}
+	}
+
+	if (hand->FingersDefectsBot.size() == 1)
+	{
+		hand->NbFingerUp = 1;
+		hand->ThumbIdx = 0;
+	}
+	else
+	{
+		hand->NbFingerUp = hand->FingersDefectsBot.size();
 	}
 
 	//Draw finger image
@@ -415,6 +430,8 @@ Mat HandRegistrationHandler::Filtering(Mat src)
 		Scalar upper(median[0] + hmax, median[1] + smax, median[2] + vmax);
 		Mat thresholdImg;
 		inRange(srcHSV, lower, upper, thresholdImg);
+		Mat element = getStructuringElement(MORPH_ELLIPSE, Size(5, 5), Point(-1, -1));
+		morphologyEx(thresholdImg, thresholdImg, MORPH_OPEN, element);
 		thresholds.push_back(thresholdImg);
 	}
 
