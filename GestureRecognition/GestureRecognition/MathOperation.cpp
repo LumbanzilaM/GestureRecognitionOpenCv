@@ -13,13 +13,13 @@ MathOperation::~MathOperation()
 {
 }
 
-float MathOperation::distanceP2P(Point a, Point b)
+float MathOperation::distanceP2P(cv::Point a, cv::Point b)
 {
 	float d = sqrt(fabs(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)));
 	return d;
 }
 
-float MathOperation::angleBetween(const Point &s, const Point & f, const Point & e)
+float MathOperation::angleBetween(const cv::Point &s, const cv::Point & f, const cv::Point & e)
 {
 	float l1 = distanceP2P(f, s);
 	float l2 = distanceP2P(f, e);
@@ -30,7 +30,7 @@ float MathOperation::angleBetween(const Point &s, const Point & f, const Point &
 }
 
 
-Point MathOperation::RotatePoint(const cv::Point2f& p, float rad)
+cv::Point MathOperation::RotatePoint(const cv::Point2f& p, float rad)
 {
 	const float x = std::cos(rad) * p.x - std::sin(rad) * p.y;
 	const float y = std::sin(rad) * p.x + std::cos(rad) * p.y;
@@ -39,7 +39,7 @@ Point MathOperation::RotatePoint(const cv::Point2f& p, float rad)
 	return rot_p;
 }
 
-Point MathOperation::RotatePoint(const cv::Point2f& cen_pt, const cv::Point2f& p, float angle)
+cv::Point MathOperation::RotatePoint(const cv::Point2f& cen_pt, const cv::Point2f& p, float angle)
 {
 	float rad = (angle * M_PI) / 180;
 	const cv::Point2f trans_pt = p - cen_pt;

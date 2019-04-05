@@ -6,27 +6,26 @@
 #include <opencv2/video.hpp>
 #include<opencv2/opencv.hpp>
 
-using namespace cv;
 
 class MyCamImage
 {
 public:
-	MyCamImage(String windowname);
+	MyCamImage(cv::String windowname);
 	~MyCamImage();
 
 	bool readImage(bool doesFlip = true);
-	bool readImage(Mat *img, bool doesFlip = true);
+	bool readImage(cv::Mat *img, bool doesFlip = true);
 	void showImage();
-	void showImage(Mat *img);
-	void setWindowName(String newWindowName);
-	String getWindowName();
+	void showImage(cv::Mat *img);
+	void setWindowName(cv::String newWindowName);
+	cv::String getWindowName();
 
-	Mat capture;
-	VideoCapture cam;
+	cv::Mat capture;
+	cv::VideoCapture cam;
 
 
 private:
-	String windowName;
+	cv::String windowName;
 	
 };
 

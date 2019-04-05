@@ -4,6 +4,7 @@
 #include <math.h>
 #include "HandRegistrationHandler.h"
 #include "GestureLibrary.h"
+#include "Communication.h"
 
 
 class GestureRecognition
@@ -18,17 +19,18 @@ public:
 private:
 	void prepareHandExtraction();
 	void FindGesture();
-	float distanceP2P(Point a, Point b);
-	float angleBetween(const Point &v1, const Point &origin, const Point &v2);
+	float distanceP2P(cv::Point a, cv::Point b);
+	float angleBetween(const cv::Point &v1, const cv::Point &origin, const cv::Point &v2);
 	void Draw();
 	void performHandExtraction();
-	void writeGesture(String gesture);
+	void writeGesture(std::string gesture);
 
+	Communication *comManager;
 	GestureLibrary gestureLib;
 	HandRegistrationHandler registrationHandler;
 	MyCamImage *actualCamImg;
 	MyCamImage *threshImg;
-	vector<vector<Point>> contours;
+	vector<vector<cv::Point>> contours;
 	vector<Hand> hands;
 	char a[40];
 

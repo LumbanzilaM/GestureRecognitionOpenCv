@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="AGesture.h" />
     <ClInclude Include="BackGesture.h" />
+    <ClInclude Include="Communication.h" />
     <ClInclude Include="GestureLibrary.h" />
     <ClInclude Include="GestureRecognition.h" />
     <ClInclude Include="Hand.h" />
@@ -162,6 +163,7 @@
   <ItemGroup>
     <ClCompile Include="AGesture.cpp" />
     <ClCompile Include="BackGesture.cpp" />
+    <ClCompile Include="Communication.cpp" />
     <ClCompile Include="GestureLibrary.cpp" />
     <ClCompile Include="GestureRecognition.cpp" />
     <ClCompile Include="Hand.cpp" />

@@ -7,7 +7,8 @@ GestureRecognition::GestureRecognition(MyCamImage *camImg) : actualCamImg(camImg
 {
 	hands.push_back(Hand());
 	hands.push_back(Hand());
-}
+	comManager = new Communication();
+}		
 
 
 GestureRecognition::~GestureRecognition()
@@ -36,10 +37,10 @@ void GestureRecognition::launchGestureRecognition()
 		FindGesture();
 		Draw();
 		actualCamImg->showImage();
-		if (waitKey(30) == 27) {
+		if (cv::waitKey(30) == 27) {
 			break;
 		}
-		if (waitKey(30) == 'r')
+		if (cv::waitKey(30) == 'r')
 		{
 			reset = true;
 			break;
@@ -53,15 +54,15 @@ void GestureRecognition::launchGestureRecognition()
 
 void GestureRecognition::prepareHandExtraction()
 {
-	Mat resImg;
+	cv::Mat resImg;
 	actualCamImg->capture = resImg;
 	actualCamImg->readImage();
 	registrationHandler.FindAndHideFace(actualCamImg->capture);
 	threshImg->capture = registrationHandler.FilterHand(actualCamImg->capture);
 
 	contours;
-	vector<Vec4i>hierarchy;
-	findContours(threshImg->capture, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point());
+	vector<cv::Vec4i>hierarchy;
+	findContours(threshImg->capture, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
 	registrationHandler.FindPalmCenter(threshImg->capture, &hands[0], true);
 	threshImg->showImage();
 
@@ -70,16 +71,18 @@ void GestureRecognition::prepareHandExtraction()
 void GestureRecognition::FindGesture()
 {
 	string gesture = gestureLib.FindGesture(hands[0]);
-	putText(actualCamImg->capture, gesture, Point(100,100), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 0, 255), 2, 8, false);
+	comManager->Send(gesture);
+	putText(actualCamImg->capture, gesture, cv::Point(100,100), CV_FONT_HERSHEY_SIMPLEX, 3, cv::Scalar(255, 0, 255), 2, 8, false);
+
 }
 
-float GestureRecognition::distanceP2P(Point a, Point b)
+float GestureRecognition::distanceP2P(cv::Point a, cv::Point b)
 {
 	float d = sqrt(fabs(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)));
 	return d;
 }
 
-float GestureRecognition::angleBetween(const Point &s, const Point &f, const Point &e)
+float GestureRecognition::angleBetween(const cv::Point &s, const cv::Point &f, const cv::Point &e)
 {
 	float l1 = distanceP2P(f, s);
 	float l2 = distanceP2P(f, e);
@@ -91,29 +94,29 @@ float GestureRecognition::angleBetween(const Point &s, const Point &f, const Poi
 
 void GestureRecognition::Draw()
 {
-	for each(Point pt in hands[0].PalmCircle)
+	for each(cv::Point pt in hands[0].PalmCircle)
 	{
-		circle(actualCamImg->capture, pt, 1, Scalar(255, 0, 255), -2);
+		circle(actualCamImg->capture, pt, 1, cv::Scalar(255, 0, 255), -2);
 	}
-	polylines(actualCamImg->capture, hands[0].PalmContour, true, Scalar(0, 0, 255), 1);
+	polylines(actualCamImg->capture, hands[0].PalmContour, true, cv::Scalar(0, 0, 255), 1);
 	hands[0].FingerTips.clear();
-	circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
+	circle(actualCamImg->capture, hands[0].PalmCenter, 5, cv::Scalar(255, 0, 0), -2);
 	if (hands[0].WristPoints.size() > 1)
 	{
-		line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
+		line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], cv::Scalar(0, 255, 255), 10, 8);
 	}
 	int a = hands[0].RotationAngle;
 	stringstream ss;
 	ss << a;
 	string str = ss.str();
-	putText(actualCamImg->capture, str, hands[0].PalmCenter, CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
+	putText(actualCamImg->capture, str, hands[0].PalmCenter, CV_FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 0), 2, 8, false);
 }
 
 //Deprecated
 void GestureRecognition::performHandExtraction()
 {
 	int count = 0;
-	vector<vector<Point>> selectedContours;
+	vector<vector<cv::Point>> selectedContours;
 	if (contours.size() > 0) {
 		size_t indexOfBiggestContour = -1;
 		size_t sizeOfBiggestContour = 0;
@@ -133,16 +136,16 @@ void GestureRecognition::performHandExtraction()
 
 
 		vector<vector<int> >hull(contours.size());
-		vector<vector<Point> >hullPoint(contours.size());
-		vector<vector<Vec4i> >defects(contours.size());
-		vector<vector<Point> >defectPoint(contours.size());
-		vector<vector<Point> >contours_poly(contours.size());
-		vector<Point> fingerMaskUp;
-		vector<Point> fingerMaskDown;
-		vector<Point> fingerMask;
-		Point2f rect_point[4];
-		vector<RotatedRect>minRect(contours.size());
-		vector<Rect> boundRect(contours.size());
+		vector<vector<cv::Point> >hullPoint(contours.size());
+		vector<vector<cv::Vec4i> >defects(contours.size());
+		vector<vector<cv::Point> >defectPoint(contours.size());
+		vector<vector<cv::Point> >contours_poly(contours.size());
+		vector<cv::Point> fingerMaskUp;
+		vector<cv::Point> fingerMaskDown;
+		vector<cv::Point> fingerMask;
+		cv::Point2f rect_point[4];
+		vector<cv::RotatedRect>minRect(contours.size());
+		vector<cv::Rect> boundRect(contours.size());
 		for (size_t i = 0;i < contours.size();i++) {
 			if (contourArea(contours[i]) > 8000) {
 				convexHull(contours[i], hull[i], false);
@@ -159,8 +162,8 @@ void GestureRecognition::performHandExtraction()
 					count = 0;
 					approxPolyDP(contours[i], contours_poly[i], 3, false);
 					boundRect[i] = boundingRect(contours_poly[i]);
-					rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 0, 0), 2, 8, 0);
-					Rect tmp = boundRect[i];
+					rectangle(actualCamImg->capture, boundRect[i].tl(), boundRect[i].br(), cv::Scalar(255, 0, 0), 2, 8, 0);
+					cv::Rect tmp = boundRect[i];
 					int heigt = tmp.height;
 					int width = tmp.width;
 					for (size_t k = 0;k < defects[i].size();k++) {
@@ -221,7 +224,7 @@ void GestureRecognition::performHandExtraction()
 					fingerMask.insert(fingerMask.end(), fingerMaskUp.begin(), fingerMaskUp.end());
 					fingerMask.insert(fingerMask.end(), fingerMaskDown.begin(), fingerMaskDown.end());
 					//polylines(actualCamImg->capture, fingerMask, true, Scalar(0, 0, 255), 5);
-					putText(actualCamImg->capture, std::to_string(count + 1), Point((boundRect[i].height + boundRect[i].x) / 2, (boundRect[i].width + boundRect[i].y) / 2), CV_FONT_HERSHEY_SIMPLEX, 3, Scalar(0, 0, 255), 2, 8, false);
+					putText(actualCamImg->capture, std::to_string(count + 1), cv::Point((boundRect[i].height + boundRect[i].x) / 2, (boundRect[i].width + boundRect[i].y) / 2), CV_FONT_HERSHEY_SIMPLEX, 3, cv::Scalar(0, 0, 255), 2, 8, false);
 					if (count == 2)
 						strcpy_s(a, "One");
 					else if (count == 3)
@@ -249,27 +252,27 @@ void GestureRecognition::performHandExtraction()
 					//	circle(actualCamImg->capture, pt, 5, Scalar(255, 0, 0), -2);
 					//	/*line(actualCamImg->capture, hands[0].PalmCenter, pt, Scalar(0, 255, 0), 2, 8);*/
 					//}
-					for each(Point pt in hands[0].PalmCircle)
+					for each(cv::Point pt in hands[0].PalmCircle)
 					{
-						circle(actualCamImg->capture, pt, 1, Scalar(255, 0, 255), -2);
+						circle(actualCamImg->capture, pt, 1, cv::Scalar(255, 0, 255), -2);
 					}
 					/*for each(Point pt in hands[0].PalmContour)
 					{
 						circle(actualCamImg->capture, pt, 1, Scalar(0, 255, 0), -2);
 					}*/
 					
-					polylines(actualCamImg->capture, hands[0].PalmContour, true, Scalar(0, 0, 255), 1);
+					polylines(actualCamImg->capture, hands[0].PalmContour, true, cv::Scalar(0, 0, 255), 1);
 					hands[0].FingerTips.clear();
-					circle(actualCamImg->capture, hands[0].PalmCenter, 5, Scalar(255, 0, 0), -2);
+					circle(actualCamImg->capture, hands[0].PalmCenter, 5, cv::Scalar(255, 0, 0), -2);
 					if (hands[0].WristPoints.size() > 1)
 					{
-						line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], Scalar(0, 255, 255), 10, 8);
+						line(actualCamImg->capture, hands[0].WristPoints[0], hands[0].WristPoints[1], cv::Scalar(0, 255, 255), 10, 8);
 					}
 					int a = hands[0].RotationAngle;
 					stringstream ss;
 					ss << a;
 					string str = ss.str();
-					putText(actualCamImg->capture, str, hands[0].PalmCenter, CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2, 8, false);
+					putText(actualCamImg->capture, str, hands[0].PalmCenter, CV_FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 0), 2, 8, false);
 					//circle(actualCamImg->capture, hands[0].PalmCenter, hands[0].PalmRadius, Scalar(0, 255, 0), 2);
 				}
 			}
@@ -277,6 +280,6 @@ void GestureRecognition::performHandExtraction()
 	}
 }
 
-void GestureRecognition::writeGesture(String gesture)
+void GestureRecognition::writeGesture(std::string gesture)
 {
 }

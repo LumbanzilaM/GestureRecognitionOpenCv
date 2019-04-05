@@ -19,7 +19,7 @@ string GestureLibrary::FindGesture(Hand hand)
 		if (gesture->isGesture(hand))
 			return gesture->getName();
 	}
-	return "no gesture detected";
+	return "NG";
 }
 
 void GestureLibrary::initLibrary()

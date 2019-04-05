@@ -2,9 +2,9 @@
 #include "MyCamImage.h"
 
 
-MyCamImage::MyCamImage(String windowname) : windowName(windowname)
+MyCamImage::MyCamImage(cv::String windowname) : windowName(windowname)
 {
-	cam = VideoCapture(0);
+	cam = cv::VideoCapture(0);
 	namedWindow(windowName, CV_WINDOW_KEEPRATIO);
 }
 
@@ -24,11 +24,11 @@ bool MyCamImage::readImage(bool doesFlip)
 	return succes;
 }
 
-bool MyCamImage::readImage(Mat *img, bool doesFlip)
+bool MyCamImage::readImage(cv::Mat *img, bool doesFlip)
 {
 	
 	bool succes = cam.read(*img);
-	if (flip)
+	if (cv::flip)
 	{
 		flip(*img, *img, 1);
 	}
@@ -40,17 +40,17 @@ void MyCamImage::showImage()
 	imshow(windowName, capture);
 }
 
-void MyCamImage::showImage(Mat *img)
+void MyCamImage::showImage(cv::Mat *img)
 {
 	imshow(windowName, *img);
 }
 
-void MyCamImage::setWindowName(String newWindowName)
+void MyCamImage::setWindowName(cv::String newWindowName)
 {
 	windowName = newWindowName;
 }
 
-String MyCamImage::getWindowName()
+cv::String MyCamImage::getWindowName()
 {
 	return windowName;
 }
