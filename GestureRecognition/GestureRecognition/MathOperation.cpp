@@ -48,3 +48,11 @@ cv::Point MathOperation::RotatePoint(const cv::Point2f& cen_pt, const cv::Point2
 
 	return fin_pt;
 }
+
+double  MathOperation::diffclock(clock_t clock1, clock_t clock2) {
+
+	double diffticks = clock1 - clock2;
+	double diffms = diffticks / CLOCKS_PER_SEC;
+
+	return diffms;
+}

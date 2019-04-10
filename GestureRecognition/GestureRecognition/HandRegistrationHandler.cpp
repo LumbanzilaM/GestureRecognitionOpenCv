@@ -465,7 +465,7 @@ vector<vector<cv::Point>> HandRegistrationHandler::FindTwoBiggestContoursBBox(cv
 		}
 	}
 	if (indexOfBiggestContour != -1)
-	ret.push_back(contours[indexOfBiggestContour]);
+		ret.push_back(contours[indexOfBiggestContour]);
 
 	//Manage only one hand for now
 	/*if (indexOfSecondContour != -1)

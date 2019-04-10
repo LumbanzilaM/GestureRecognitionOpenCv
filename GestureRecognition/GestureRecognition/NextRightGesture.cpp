@@ -21,11 +21,10 @@ void NextRightGesture::initGesture()
 
 bool NextRightGesture::isGesture(Hand hand)
 {
-	if (hand.NbFingerUp == 1)
+	if (hand.NbFingerUp >= nbFingers)
 	{
 		if (hand.RotationAngle > 30 && hand.RotationAngle < 70)
 			return true;
 	}
-
 	return false;
 }

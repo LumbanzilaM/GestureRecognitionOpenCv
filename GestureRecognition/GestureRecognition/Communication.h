@@ -2,6 +2,13 @@
 #include "stdio.h"
 #include <string>
 #include <windows.h>
+#include <KnownFolders.h>
+#include <shlobj.h>
+#include <string.h>
+#include <sstream>
+#include <iostream>
+#include <fstream>
+#include <ctime>
 
 class Communication
 {
@@ -11,20 +18,9 @@ public:
 
 	void Send(std::string message);
 private:
-	////Pipe Init Data
-	//char buf[100];
-
-	//HANDLE hPipe1, hPipe2;
-	//LPTSTR lpszPipename1 = TEXT("\\\\.\\pipe\\myNamedPipe1");
-	//LPTSTR lpszPipename2 = TEXT("\\\\.\\pipe\\myNamedPipe2");
-
-	//DWORD cbWritten;
-	//DWORD dwBytesToWrite = (DWORD)strlen(buf);
-
-	////Thread Init Data
-	//DWORD threadId;
-	//HANDLE hThread = NULL;
-
-	//BOOL Write_St = TRUE;
+	std::wstring	gesturePath;
+	std::wstring	tmpPath;
+	std::ofstream	myfile;
+	const char*		gestureFile = "gestures.txt";
 };
 

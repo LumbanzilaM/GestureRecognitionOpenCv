@@ -4,6 +4,12 @@
 
 Communication::Communication()
 {
+	wchar_t* path = NULL;
+	HRESULT hr = SHGetKnownFolderPath(FOLDERID_Pictures, 0, NULL, &path);
+	std::wstringstream ss;
+	ss << path << "\\" << gestureFile;
+	gesturePath = ss.str();
+	CoTaskMemFree(static_cast<void*>(path));
 }
 
 
@@ -13,21 +19,12 @@ Communication::~Communication()
 
 void Communication::Send(std::string message)
 {
-	char buf[100];
-	HANDLE hPipe1;
-	LPTSTR lpszPipename1 = TEXT("\\\\.\\pipe\\myNamedPipe1");
-	DWORD cbWritten;
-	DWORD dwBytesToWrite = (DWORD)strlen(buf);
-	//Thread Init Data
-	BOOL Write_St = TRUE;
-
-	hPipe1 = CreateFile(lpszPipename1, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-
-	if (message != "NG")
-	{
-		strcpy_s(buf, message.c_str());	// or pass &s[0]
-		WriteFile(hPipe1, buf, message.size(), &cbWritten, NULL);
-		memset(buf, 0xCC, 100);
-	}
+	myfile.open(gesturePath, std::ofstream::out | std::ofstream::trunc);
+	time_t result = time(NULL);
+	char str[26];
+	ctime_s(str, sizeof str, &result);
+	std::string newMessage = message + "-" + str;
+	myfile << newMessage << std::endl;
+	myfile.close();
 }
 

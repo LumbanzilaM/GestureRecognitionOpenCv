@@ -2,6 +2,8 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
+#include <ctime>
+#include <chrono>
 #include "HandRegistrationHandler.h"
 #include "GestureLibrary.h"
 #include "Communication.h"
@@ -32,6 +34,8 @@ private:
 	MyCamImage *threshImg;
 	vector<vector<cv::Point>> contours;
 	vector<Hand> hands;
+	clock_t cstart;
+	std::chrono::time_point<std::chrono::high_resolution_clock> t_start;
 	char a[40];
 
 };

@@ -8,6 +8,7 @@ GestureRecognition::GestureRecognition(MyCamImage *camImg) : actualCamImg(camImg
 	hands.push_back(Hand());
 	hands.push_back(Hand());
 	comManager = new Communication();
+	t_start = std::chrono::high_resolution_clock::now();
 }		
 
 
@@ -71,8 +72,16 @@ void GestureRecognition::prepareHandExtraction()
 void GestureRecognition::FindGesture()
 {
 	string gesture = gestureLib.FindGesture(hands[0]);
-	comManager->Send(gesture);
-	putText(actualCamImg->capture, gesture, cv::Point(100,100), CV_FONT_HERSHEY_SIMPLEX, 3, cv::Scalar(255, 0, 255), 2, 8, false);
+	clock_t cend = clock();
+	MathOperation mop;
+	auto t_end = std::chrono::high_resolution_clock::now();
+	auto time = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+	if (gesture != "NG" && time >= 2000 )
+	{
+		comManager->Send(gesture);
+		putText(actualCamImg->capture, gesture, cv::Point(100, 100), CV_FONT_HERSHEY_SIMPLEX, 3, cv::Scalar(255, 0, 255), 2, 8, false);
+		t_start = std::chrono::high_resolution_clock::now();
+	}
 
 }
 
