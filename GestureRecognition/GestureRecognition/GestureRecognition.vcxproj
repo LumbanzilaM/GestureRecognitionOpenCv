@@ -153,8 +153,10 @@
     <ClInclude Include="GestureRecognition.h" />
     <ClInclude Include="Hand.h" />
     <ClInclude Include="HandRegistrationHandler.h" />
+    <ClInclude Include="LockGesture.h" />
     <ClInclude Include="MathOperation.h" />
     <ClInclude Include="MyCamImage.h" />
+    <ClInclude Include="NextLeftGesture.h" />
     <ClInclude Include="NextRightGesture.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -167,10 +169,12 @@
     <ClCompile Include="GestureLibrary.cpp" />
     <ClCompile Include="GestureRecognition.cpp" />
     <ClCompile Include="Hand.cpp" />
+    <ClCompile Include="LockGesture.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="HandRegistrationHandler.cpp" />
     <ClCompile Include="MathOperation.cpp" />
     <ClCompile Include="MyCamImage.cpp" />
+    <ClCompile Include="NextLeftGesture.cpp" />
     <ClCompile Include="NextRightGesture.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

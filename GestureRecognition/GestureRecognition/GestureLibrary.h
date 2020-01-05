@@ -3,6 +3,8 @@
 #include "ValidateGesture.h"
 #include "BackGesture.h"
 #include "NextRightGesture.h"
+#include "NextLeftGesture.h"
+#include "LockGesture.h"
 
 class GestureLibrary
 {

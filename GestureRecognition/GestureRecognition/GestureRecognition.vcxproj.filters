@@ -63,6 +63,12 @@
     <ClInclude Include="Communication.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="NextLeftGesture.h">
+      <Filter>Fichiers d%27en-tête\Gestures</Filter>
+    </ClInclude>
+    <ClInclude Include="LockGesture.h">
+      <Filter>Fichiers d%27en-tête\Gestures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -103,6 +109,12 @@
     </ClCompile>
     <ClCompile Include="Communication.cpp">
       <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="NextLeftGesture.cpp">
+      <Filter>Fichiers sources\Gesture</Filter>
+    </ClCompile>
+    <ClCompile Include="LockGesture.cpp">
+      <Filter>Fichiers sources\Gesture</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

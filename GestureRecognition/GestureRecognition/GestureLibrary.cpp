@@ -26,6 +26,7 @@ void GestureLibrary::initLibrary()
 {
 	gestures.push_back(new ValidateGesture());
 	gestures.push_back(new BackGesture());
+	gestures.push_back(new NextLeftGesture());
 	gestures.push_back(new NextRightGesture());
-
+	gestures.push_back(new LockGesture());
 }

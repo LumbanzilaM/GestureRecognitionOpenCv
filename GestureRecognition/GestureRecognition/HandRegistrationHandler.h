@@ -33,7 +33,7 @@ public:
 	cv::Mat ExtractPalm(cv::Mat src, Hand* hand);
 	cv::Mat RotateHand(cv::Mat src, Hand * hand);
 	cv::Mat ExtractFingers(cv::Mat src, Hand* hand);
-
+	bool HandFind;
 
 
 private : 

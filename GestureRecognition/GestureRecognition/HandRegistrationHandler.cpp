@@ -24,7 +24,7 @@ void HandRegistrationHandler::InitHandRegistration(MyCamImage *camImg)
 	vmin = 0;
 	vmax = 255;
 	smin = 26;
-	smax = 26;
+	smax = 255;
 	cv::createTrackbar("Hmin", TrackBars->getWindowName(), &hmin, 256, 0);
 	cv::createTrackbar("Hmax", TrackBars->getWindowName(), &hmax, 256, 0);
 	cv::createTrackbar("Vmin", TrackBars->getWindowName(), &vmin, 256, 0);
@@ -105,12 +105,12 @@ cv::Mat HandRegistrationHandler::FilterHand(cv::Mat src)
 
 	//Erase noise with erode, and find contours
 	result = Filtering(src);
-	erode(result, result, element, cv::Point(1, 1), 3);
-	Canny(result, canny, 0, 255);
-	dilate(canny, canny, element, cv::Point(1, 1), 5);
-	imshow("Afeter canny", canny);
-	dilate(result, result, element, cv::Point(1, 1), 5);
-	imshow("Afeter dilate", result);
+	//erode(result, result, element, cv::Point(1, 1), 3);
+	//Canny(result, canny, 0, 255);
+	//dilate(canny, canny, element, cv::Point(1, 1), 5);
+	//imshow("Afeter canny", canny);
+	//dilate(result, result, element, cv::Point(1, 1), 5);
+	//imshow("Afeter dilate", result);
 	findContours(result, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
 	//Draw filled contours
@@ -121,13 +121,12 @@ cv::Mat HandRegistrationHandler::FilterHand(cv::Mat src)
 		cv::Scalar color = cv::Scalar(255, 255, 255);
 		convexHull(contours[i], hull[i]);
 		drawContours(drawing, contours, i, color, cv::FILLED, 8, hierarchy, 0, cv::Point());
-		//drawContours(drawing, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point());
 	}
 	//Dilate result for counterbalance the previous erode
 	//dilate(drawing, drawing, element, Point(1, 1), 3);
 	/*imshow("Contours", drawing);*/
 	cvtColor(drawing, result, CV_RGB2GRAY);
-	GaussianBlur(result, result, cv::Size(3, 3), 1);
+	//GaussianBlur(result, result, cv::Size(3, 3), 1);
 	medianBlur(result, result, 7);
 	// Get hand contours and draw them on a new black mat to erase noise arround it
 	vector<vector<cv::Point>> handContours = FindTwoBiggestContoursBBox(result);
@@ -270,7 +269,7 @@ cv::Mat HandRegistrationHandler::ExtractFingers(cv::Mat src, Hand * hand)
 	hand->FingersCenter.clear();
 	for (size_t i = 0;i < contours.size();i++)
 	{
-		if (contours[i].size() > 50)
+		if (contours[i].size() > 30)
 		{
 			cv::Rect bounding = boundingRect(contours[i]);
 			cv::RotatedRect rect = minAreaRect(contours[i]);
@@ -429,8 +428,8 @@ cv::Mat HandRegistrationHandler::Filtering(cv::Mat src)
 		cv::Scalar upper(median[0] + hmax, median[1] + smax, median[2] + vmax);
 		cv::Mat thresholdImg;
 		inRange(srcHSV, lower, upper, thresholdImg);
-		cv::Mat element = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5), cv::Point(-1, -1));
-		morphologyEx(thresholdImg, thresholdImg, cv::MORPH_OPEN, element);
+		//cv::Mat element = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5), cv::Point(-1, -1));
+		//morphologyEx(thresholdImg, thresholdImg, cv::MORPH_OPEN, element);
 		thresholds.push_back(thresholdImg);
 	}
 
@@ -464,9 +463,13 @@ vector<vector<cv::Point>> HandRegistrationHandler::FindTwoBiggestContoursBBox(cv
 			indexOfBiggestContour = i;
 		}
 	}
-	if (indexOfBiggestContour != -1)
+	if (indexOfBiggestContour != -1 && contours[indexOfBiggestContour].size() > 200)
+	{
 		ret.push_back(contours[indexOfBiggestContour]);
-
+		HandFind = true;
+	}
+	else
+		HandFind = false;
 	//Manage only one hand for now
 	/*if (indexOfSecondContour != -1)
 	ret.push_back(contours[indexOfSecondContour]);*/

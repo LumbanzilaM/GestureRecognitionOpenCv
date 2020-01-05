@@ -1,0 +1,8 @@
+﻿  stdafx.cpp
+  AssemblyInfo.cpp
+  CsharpCom.cpp
+  Génération de code en cours...
+  .NETFramework,Version=v4.6.1.AssemblyAttributes.cpp
+  AssemblyInfo.obj : module MSIL détecté ; liens incrémentiels désactivés pour MSIL ; édition de liens complète en cours
+Project1.lib(Communication.obj) : warning LNK4075: ' /EDITANDCONTINUE' ignorÚ Ó cause de la spÚcification '/INCREMENTAL:NO'
+  CsharpCom.vcxproj -> C:\GestureRecognitionDev\GestureRecognition\x64\Debug\CsharpCom.dll

@@ -23,7 +23,7 @@ bool NextRightGesture::isGesture(Hand hand)
 {
 	if (hand.NbFingerUp >= nbFingers)
 	{
-		if (hand.RotationAngle > 30 && hand.RotationAngle < 70)
+		if (hand.RotationAngle > 60 && hand.RotationAngle < 80)
 			return true;
 	}
 	return false;
